@@ -1,3 +1,39 @@
+@import "https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css";
+
 .bg-c1 {
-  background-color: #d90e00;
+  background-color: #72abd8;
+}
+
+.moul-regular {
+  font-family: "Moul", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.gowun-batang-regular {
+  font-family: "Gowun Batang", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.gowun-batang-bold {
+  font-family: "Gowun Batang", serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.input-form {
+  max-width: 400px;
+  width: 100%;
+}
+
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .company-name {
+    text-align: center;
+  }
+  .info-title {
+    text-align: center;
+  }
 }
