@@ -1,0 +1,120 @@
+{% extends "user_layout.html" %}
+
+<!-- Side navigation -->
+{% block side_nav %}
+<ul class="list-unstyled"> 
+  <li class="{{ d_active }}">
+    <a href="{{ url_for('admin_bp.dashboard') }}" 
+      class="text-white text-decoration-none">
+      <i class="material-icons">dashboard</i>
+      <span class="nav-label">Dashboard</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">calendar_month</i>
+      <span class="nav-label">Calendar</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">school</i>
+      <span class="nav-label">Grades</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">diversity_3</i>
+      <span class="nav-label">Students</span>
+    </a>
+  </li>
+  <li class="{{ t_active }}">
+    <a href="{{ url_for('admin_bp.manage_teachers') }}" 
+      class="text-white text-decoration-none">
+      <i class="material-icons">cast_for_education</i>
+      <span class="nav-label">Teachers</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">supervised_user_circle</i>
+      <span class="nav-label">BOM/PTA</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">diversity_1</i>
+      <span class="nav-label">Staff</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">analytics</i>
+      <span class="nav-label">Exams</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">sms</i>
+      <span class="nav-label">Messages</span>
+    </a>
+  </li>
+  <hr>
+  <li>
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">print</i>
+      <span class="nav-label">Print outs</span>
+    </a>
+  </li>
+  <li class="mt-4">
+    <a href="#" class="text-white text-decoration-none">
+      <i class="material-icons">logout</i>
+      <span class="nav-label fw-bold">Logout</span>
+    </a>
+  </li>
+</ul>
+{% endblock side_nav %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %} 
+{% endblock main_content %}
+
+<!-- Horizontal navs for smalll screens --> 
+{% block horizontal_nav_sm_screen %}
+  <nav class="nav dis-none has-background-primary">
+    <a href="{{ url_for('admin_bp.dashboard') }}" 
+    class="nav__link {{ d_active }}">
+      <i class="material-icons nav__icon">dashboard</i>
+      <span class="nav__text">Dashboard</span>
+    </a>
+    <a href="#" class="nav__link">
+      <i class="material-icons nav__icon">school</i>
+      <span class="nav__text">Grades</span>
+    </a>
+    <a href="#" class="nav__link">
+      <i class="material-icons nav__icon">diversity_3</i>
+      <span class="nav__text">Students</span>
+    </a>
+    <a href="{{ url_for('admin_bp.manage_teachers') }}" 
+      class="nav__link {{ t_active }}">
+      <i class="material-icons nav__icon">cast_for_education</i>
+      <span class="nav__text">Teachers</span>
+    </a>
+    <a href="#" class="nav__link">
+      <i class="material-icons nav__icon">analytics</i>
+      <span class="nav__text">Exams</span>
+    </a>
+    <a href="#" class="nav__link">
+      <i class="material-icons nav__icon">unfold_more</i>
+      <span class="nav__text">More</span>
+    </a>
+    <a href="#" class="nav__link">
+      <i class="material-icons nav__icon">unfold_more</i>
+      <span class="nav__text">More</span>
+    </a>
+  </nav>
+{% endblock horizontal_nav_sm_screen %}

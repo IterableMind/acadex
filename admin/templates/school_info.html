@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+  <div class="container d-flex links align-items-center">
+     <a href="{{ url_for('admin_bp.school_info') }}">
+        <div class="d-flex link__width sub--link--active">
+          <i class="material-icons">apartment</i>
+          <span>Manage Sch Info</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.manage_teachers') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">analytics</i>
+          <span class="">Manage Teachers</span>
+        </div>
+      </a>
+  </div> 
+{% endblock horizontal_nav %}
+
+
+<!-- Main content area -->
+{% block main_content %}
+  <div class="bg-light p-4 border rounded shadow-sm mt-4 info-form">
+    <form action="{{ url_for('admin_bp.school_info') }}" method="post" novalidate>
+      <div class="form">
+        {{ form.hidden_tag() }}
+        <h5 class="text-center pb-2 fw-light" id="update-title"> 
+          Update School Information
+        </h5>
+        <div class="row mt-4">
+          <div class="col-sm-6">
+            <div class="field">
+              <label for="name" class="label">{{ form.name.label() }}</label>
+              <p class="control has-icons-left has-icons-right">
+                {{ form.name(id="name", class="input is-primary" + 
+                  (' is-danger' if form.name.errors else ''), 
+                  style="text-transform: uppercase;") }}
+                {% for error in form.name.errors %}
+                  <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+                <span class="icon is-small is-left text-success text-muted"> 
+                  <i class="material-icons">apartment</i>
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="field">
+              <label for="contact_email" class="label">
+                {{ form.contact_email.label() }}
+              </label>
+              <p class="control has-icons-left has-icons-right">
+                {{ form.contact_email(id="contact_email", class="input is-primary" + 
+                  (' is-danger' if form.contact_email.errors else '')) }}
+                {% for error in form.contact_email.errors %}
+                  <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+                <span class="icon is-small is-left text-success text-muted"> 
+                  <i class="material-icons">mark_email_unread</i>
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="field">
+              <label for="registration_number" class="label">
+                {{ form.registration_number.label() }}
+              </label>
+              <p class="control has-icons-left has-icons-right">
+                {{ form.registration_number(id="registration_number", class="input is-primary" + 
+                  (' is-danger' if form.registration_number.errors else '')) }}
+                {% for error in form.registration_number.errors %}
+                  <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+                <span class="icon is-small is-left text-success text-muted"> 
+                  <i class="material-icons">app_registration</i>
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="field">
+              <label for="contact_phone" class="label">
+                {{ form.contact_phone.label() }}
+              </label>
+              <p class="control has-icons-left has-icons-right">
+                {{ form.contact_phone(id="contact_phone", class="input is-primary" + 
+                  (' is-danger' if form.contact_phone.errors else '')) }}
+                {% for error in form.contact_phone.errors %}
+                  <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+                <span class="icon is-small is-left text-success text-muted"> 
+                  <i class="material-icons">call</i>
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="field">
+              <label for="address" class="label">{{ form.address.label() }}</label>
+              <p class="control has-icons-left has-icons-right">
+                {{ form.address(id="address", class="input is-primary" + 
+                  (' is-danger' if form.address.errors else '')) }}
+                {% for error in form.address.errors %}
+                  <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+                <span class="icon is-small is-left text-success text-muted"> 
+                  <i class="material-icons">contact_mail</i>
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex justify-content-end mt-3">
+              {{ form.submit(class="btn btn-secondary w-sm-100") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div> 
+  <div class="line-with-text mt-5">
+    <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+  </div>
+{% endblock main_content %}
+

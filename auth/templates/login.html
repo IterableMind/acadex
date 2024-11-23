@@ -55,7 +55,9 @@
         {{ form.submit(class="btn btn-success") }}
       </div>
       <div class="text-center mt-3">
-        <a href="#" class="text-decoration-none">Forgot Password?</a>
+        <a href="{{ url_for('auth.recover_password') }}" class="text-decoration-none">
+          Forgot Password?
+        </a>
       </div>
     </form>
    </div>

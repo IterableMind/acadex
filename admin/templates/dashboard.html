@@ -1,0 +1,29 @@
+ {% extends "base.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+  <div class="container d-flex links align-items-center">
+     <a href="{{ url_for('admin_bp.school_info') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">apartment</i>
+          <span>Manage Sch Info</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.manage_teachers') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">analytics</i>
+          <span class="">Manage Teachers</span>
+        </div>
+      </a>
+      <a href="">
+        <div class="d-flex link__width">
+          <i class="material-icons">settings</i>
+          <span class="">School Settings</span>
+        </div>
+      </a>
+  </div> 
+{% endblock horizontal_nav %}
+
+ {% block main_content %}
+  <h1 class="text-center">Hello Admin</h1>
+{% endblock main_content %}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('admin_bp.static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>
+    {% if title %}
+      Acadex | {{ title }}
+    {% else %}
+      Acadex-Home
+    {% endif %}
+  </title>
+</head>
+<body>
+  <!-- Header Section -->
+  <div class="fixed-header bg-white shadow-sm d-flex align-items-center p-3">
+    <div class="me-auto d-flex">
+      <div>
+        <img src="{{ url_for('static', filename='images/logo/sys-logo.png') }}" alt="Logo">
+        <span class="fw-bold has-text-primary company-title">Acadex&trade;</span>
+      </div>
+      <h5 class="mx-5 fw-bold-5 has-text-primary school-name">
+        ST. PHILIP'S NYABONDO SECONDARY SCHOOL
+      </h5>
+    </div>
+    <div>
+      <i class="fas fa-bell me-4"></i>
+      <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle">
+    </div>
+  </div>
+
+  <!-- Side Navigation -->
+  <div class="side-nav has-background-primary pt-5"> 
+    {% block side_nav %}{% endblock side_nav %}
+  </div>
+
+  <!-- Horizontal Navigation -->
+  <div class="horizontal-nav has-background-primary mx-1">
+    {% block horizontal_nav %}{% endblock horizontal_nav %}
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    {% block main_content %}{% endblock main_content %}
+  </div>
+
+  <!-- Horizontal navs for smalll screens --> 
+  {% block horizontal_nav_sm_screen %}
+  {% endblock horizontal_nav_sm_screen %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
