@@ -29,7 +29,7 @@
     </a>
   </li>
   <li class="{{ t_active }}">
-    <a href="{{ url_for('admin_bp.manage_teachers') }}" 
+    <a href="{{ url_for('admin_bp.view_teachers') }}" 
       class="text-white text-decoration-none">
       <i class="material-icons">cast_for_education</i>
       <span class="nav-label">Teachers</span>
@@ -67,7 +67,8 @@
     </a>
   </li>
   <li class="mt-4">
-    <a href="#" class="text-white text-decoration-none">
+    <a href="{{ url_for('admin_bp.logout') }}" 
+      class="text-white text-decoration-none">
       <i class="material-icons">logout</i>
       <span class="nav-label fw-bold">Logout</span>
     </a>
@@ -99,19 +100,11 @@
       <i class="material-icons nav__icon">diversity_3</i>
       <span class="nav__text">Students</span>
     </a>
-    <a href="{{ url_for('admin_bp.manage_teachers') }}" 
+    <a href="{{ url_for('admin_bp.view_teachers') }}" 
       class="nav__link {{ t_active }}">
       <i class="material-icons nav__icon">cast_for_education</i>
       <span class="nav__text">Teachers</span>
-    </a>
-    <a href="#" class="nav__link">
-      <i class="material-icons nav__icon">analytics</i>
-      <span class="nav__text">Exams</span>
-    </a>
-    <a href="#" class="nav__link">
-      <i class="material-icons nav__icon">unfold_more</i>
-      <span class="nav__text">More</span>
-    </a>
+    </a> 
     <a href="#" class="nav__link">
       <i class="material-icons nav__icon">unfold_more</i>
       <span class="nav__text">More</span>

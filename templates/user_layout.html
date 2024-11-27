@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
   <title>
     {% if title %}
       Acadex | {{ title }}
@@ -16,7 +16,7 @@
     {% endif %}
   </title>
 </head>
-<body>
+<body class="bg-light">
   <!-- Header Section -->
   <div class="fixed-header bg-white shadow-sm d-flex align-items-center p-3">
     <div class="me-auto d-flex">
@@ -25,12 +25,18 @@
         <span class="fw-bold has-text-primary company-title">Acadex&trade;</span>
       </div>
       <h5 class="mx-5 fw-bold-5 has-text-primary school-name">
-        ST. PHILIP'S NYABONDO SECONDARY SCHOOL
+        {{ g.general_info.school_name }}
       </h5>
     </div>
     <div>
       <i class="fas fa-bell me-4"></i>
-      <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle">
+      <a href="{{ url_for('admin_bp.update_profile') }}">
+        {% if current_user.teacher.passport_filename %}
+          <img src="{{ url_for('static', filename='images/profile-pictures/{0}'.format(current_user.teacher.passport_filename))  }}" alt="Profile" class="profile-sm">
+        {% else %}
+          <img src="{{ url_for('static', filename='images/profile-pictures/default.JPG') }}" alt="Profile" class="profile-sm">
+        {% endif %}
+      </a>
     </div>
   </div>
 

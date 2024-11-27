@@ -1,5 +1,5 @@
 .fw-bold-5 {
-  font-weight: 600;
+  font-weight: 900;
 }
 
 /* Make header fixed */
@@ -46,7 +46,7 @@
 }
 
 .link--active {
-  background-color: rgb(4, 157, 103); 
+  background-color: rgb(67, 186, 152); 
   border-radius: 3px;
   padding: 5px;
   font-weight: bold;
@@ -128,6 +128,17 @@
   .horizontal-nav {
     left: 0;
   }
+
+  .x {
+    background-color: red !important;
+    width: 100%;
+
+  }
+
+  .dis-sm-none {
+    display: none !important;
+  }
+
   #update-title {
     font-size: 1rem;
   }
@@ -147,7 +158,7 @@
 /* Main content styling */
 .main-content {
   margin-top: 110px; /* Height of header + horizontal nav */
-  margin-left: 200px; /* Width of side nav */
+  margin-left: 170px; /* Width of side nav */
   padding: 15px;
 }
 
@@ -159,9 +170,11 @@
   .main-content {
     margin-left: 0;
   }
+
   .school-name {
    display: none;
   }
+
   .company-title {
     font-weight: 900;
     font-size: 1.5rem;
@@ -203,9 +216,6 @@
     transition: background-color 0.1s ease-in-out;
   }
 
-  .nav__link--active {
-      color: #009578;
-  }
 
   .nav__icon {
       font-size: 18px;
@@ -233,4 +243,32 @@
 
 .line-with-text::after {
   margin-left: 0.5em;
+}
+
+.profile-lg {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.profile-sm {
+  background-color: rgb(232 232 232);
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+}
+
+.icon-lg {
+  font-size: 40px !important;
+  margin-left: 10px !important;
+  color: #3c3d3c; 
+}
+
+.card-link a {
+  color: green;
+  font-weight: 900;
 }

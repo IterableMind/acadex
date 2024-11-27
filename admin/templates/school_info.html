@@ -3,13 +3,19 @@
 <!-- Horizontal navigation -->
 {% block horizontal_nav %} 
   <div class="container d-flex links align-items-center">
+     <a href="{{ url_for('admin_bp.dashboard') }}">
+      <div class="d-flex link__width">
+        <i class="material-icons">home</i>
+        <span>Home</span>
+      </div>
+     </a>
      <a href="{{ url_for('admin_bp.school_info') }}">
         <div class="d-flex link__width sub--link--active">
           <i class="material-icons">apartment</i>
           <span>Manage Sch Info</span>
         </div>
       </a>
-      <a href="{{ url_for('admin_bp.manage_teachers') }}">
+      <a href="{{ url_for('admin_bp.view_teachers') }}">
         <div class="d-flex link__width">
           <i class="material-icons">analytics</i>
           <span class="">Manage Teachers</span>
@@ -21,11 +27,24 @@
 
 <!-- Main content area -->
 {% block main_content %}
-  <div class="bg-light p-4 border rounded shadow-sm mt-4 info-form">
+  <div class="bg-white p-4 border rounded shadow-sm mt-4 info-form">
+    <!-- Flashed Messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div class="alert-container">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
     <form action="{{ url_for('admin_bp.school_info') }}" method="post" novalidate>
       <div class="form">
         {{ form.hidden_tag() }}
-        <h5 class="text-center pb-2 fw-light" id="update-title"> 
+        <h5 class="text-center pb-2 fw-light has-text-primary" id="update-title"> 
           Update School Information
         </h5>
         <div class="row mt-4">

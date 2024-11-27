@@ -1,0 +1,39 @@
+<!-- Student search form -->
+<div class="search-card px-4 pt-2 pb-3 bg-white rounded-2 shadow-sm">
+  <form method="POST" action="">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      <label class="fw-bold mb-2 has-text-primary">
+        {{ form.search_by.label }} <i class="fa fa-search mx-1"></i>
+      </label>
+      <div class="d-flex gap-3 mt-1">
+        {% for subfield in form.search_by %}
+          <div class="form-check">
+            <!-- Assign the subfield ID to both the input and label -->
+            {{ subfield(id=subfield.id, class="form-check-input") }}
+            <label for="{{ subfield.id }}" class="form-check-label select-labels text-muted">
+              {{ subfield.label.text }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="form-group">
+        <div class="row">
+          <div class="col-sm-10 g-1">
+            {{ form.search_input(class="custom-form-control input is-primary is-rounded" + (' is-danger' if form.search_input.errors else ''), placeholder='Enter adm no', type='number') }}
+        
+            {% if form.search_input.errors %}
+              {% for error in form.search_input.errors %}
+                <small class="text-danger">{{ error }}</small>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="col-sm-1 g-1 d-flex justify-content-end">
+            {{ form.search(class="btn btn-sm btn-secondary rounded-pill") }}
+          </div>
+        </div>
+    </div>
+    </div>
+  </form>
+<script src="{{ url_for('admin_bp.static', filename='js/custinput.js') }}"></script>
+</div>

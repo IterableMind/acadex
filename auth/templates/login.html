@@ -24,6 +24,7 @@
         <i class="fas fa-person mx-3"></i>Login
       </h5>
       <div class="field">
+        {{ form.email.label() }}
         <p class="control has-icons-left has-icons-right">
           {{ form.email(id="email", class="input is-primary" + 
             (' is-danger' if form.email.errors else ''), placeholder='Email') }}
@@ -36,6 +37,7 @@
         </p>
       </div>
       <div class="field">
+        {{ form.password.label() }}
         <p class="control has-icons-left">
           {{ form.password(id="password", class="input is-primary" + 
             (' is-danger' if form.password.errors else ''), placeholder='Password') }}

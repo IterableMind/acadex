@@ -1,0 +1,82 @@
+{% extends "manage_teachers/layout.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+   <!-- Teacher management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="">
+         <div class="d-flex link__width sub--link--active">
+            <i class="material-icons">visibility</i>
+            <span class="">View teachers</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_teacher') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add teacher</span>
+         </div>
+      </a>
+      <a href="">
+         <div class="d-flex link__width">
+            <i class="material-icons">assignment_ind</i>
+            <span class="">Asign roles</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.update_profile') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">security_update_good</i>
+            <span class="">Update profile</span>
+         </div>
+      </a>
+   </div> 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %}
+<h5>View Teachers</h5> 
+<div class="w-100">
+   <!-- Flashed Messages -->
+   {% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+     <div class="alert-container">
+       {% for category, message in messages %}
+         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+           {{ message }}
+           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+         </div>
+       {% endfor %}
+     </div>
+   {% endif %}
+ {% endwith %}
+
+ {% if teachers %}
+  <div class="table-responsive">
+   <table class="table">
+      <thead>
+         <tr>
+            <th>#</th>
+            <th>Fullname</th>
+            <th>Username</th>
+            <th>ID No</th>
+            <th>Email</th>
+            <th>TSC No</th>
+            <th>Phone No</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for teacher in teachers %}
+            <tr>
+               <td>{{ teacher.fullname}}</td>
+               <td>{{ teacher.id_no}}</td>
+               <td>{{ teacher.email}}</td>
+               <td>{{ teacher.tsc_no}}</td>
+               <td>{{ teacher.phone_no}}</td>
+               <td>{{ teacher.role}}</td>
+            </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+  </div>
+   {% endif %}
+</div> 
+{% endblock main_content %}

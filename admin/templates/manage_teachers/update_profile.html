@@ -1,0 +1,152 @@
+{% extends "manage_teachers/layout.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+   <!-- Teacher management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.view_teachers') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">visibility</i>
+            <span class="">View teachers</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_teacher') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add teacher</span>
+         </div>
+      </a>
+      <a href="">
+         <div class="d-flex link__width">
+            <i class="material-icons">assignment_ind</i>
+            <span class="">Asign roles</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.update_profile') }}">
+        <div class="d-flex link__width sub--link--active">
+           <i class="material-icons">security_update_good</i>
+           <span class="">Update profile</span>
+        </div>
+     </a>
+   </div> 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %} 
+ <!-- Flashed Messages -->
+ {% with messages = get_flashed_messages(with_categories=True) %}
+ {% if messages %}
+   <div class="alert-container">
+     {% for category, message in messages %}
+       <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+         {{ message }}
+         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+       </div>
+     {% endfor %}
+   </div>
+ {% endif %}
+{% endwith %}
+<div class="update-form bg-white pb-3 shadow-sm border">
+   <div class="bg-success text-white d-flex align-items-center
+      justify-content-center" style="height: 36px">
+      <h6 class="text-center fw-bold">
+         <i class="fa fa-laptop mx-2" aria-hidden="true"></i>Update Profile
+      </h6>
+   </div>
+   <form method="POST" enctype="multipart/form-data" 
+      action="" class="px-4 mt-4">
+      {{ form.hidden_tag() }}
+      <div class="row">
+         <div class="col-12 col-md-6 mb-3">
+            <div class="field">
+               <label for="current_password" class="label">
+                 {{ form.current_password.label() }}
+               </label>
+               <p class="control has-icons-left has-icons-right">
+                 {{ form.current_password(id="current_password", class="input is-primary" + 
+                   (' is-danger' if form.current_password.errors else '')) }}
+                 {% for error in form.current_password.errors %}
+                   <small class="text-danger">{{ error }}</small>
+                 {% endfor %}
+                 <span class="icon is-small is-left text-success text-muted"> 
+                   <i class="material-icons">lock_open</i>
+                 </span>
+               </p>
+             </div>
+         </div>
+         <div class="col-12 col-md-6 mb-3">
+            <div class="field">
+               <label for="new_password" class="label">
+                 {{ form.new_password.label() }}
+               </label>
+               <p class="control has-icons-left has-icons-right">
+                 {{ form.new_password(id="new_password", class="input is-primary" + 
+                   (' is-danger' if form.new_password.errors else '')) }}
+                 {% for error in form.new_password.errors %}
+                   <small class="text-danger">{{ error }}</small>
+                 {% endfor %}
+                 <span class="icon is-small is-left text-success text-muted"> 
+                   <i class="material-icons">lock_clock</i>
+                 </span>
+               </p>
+             </div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-12 col-md-6 mb-3">
+            <div class="field">
+               <label for="confirm_password" class="label">
+                 {{ form.confirm_password.label() }}
+               </label>
+               <p class="control has-icons-left has-icons-right">
+                 {{ form.confirm_password(id="confirm_password", class="input is-primary" + 
+                   (' is-danger' if form.confirm_password.errors else '')) }}
+                 {% for error in form.confirm_password.errors %}
+                   <small class="text-danger">{{ error }}</small>
+                 {% endfor %}
+                 <span class="icon is-small is-left text-success text-muted"> 
+                   <i class="material-icons">lock_clock</i>
+                 </span>
+               </p>
+             </div>
+         </div>
+         <div class="col-12 col-md-6 mb-3">
+            <div class="field">
+               <label for="phone_no" class="label">
+                 {{ form.phone_no.label() }}
+               </label>
+               <p class="control has-icons-left has-icons-right">
+                 {{ form.phone_no(id="phone_no", class="input is-primary" + 
+                   (' is-danger' if form.phone_no.errors else '')) }}
+                 {% for error in form.phone_no.errors %}
+                   <small class="text-danger">{{ error }}</small>
+                 {% endfor %}
+                 <span class="icon is-small is-left text-success text-muted"> 
+                   <i class="material-icons">call</i>
+                 </span>
+               </p>
+             </div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="form-group">
+            {{ form.profile_picture.label(class="form-label") }}
+            {% if form.profile_picture.errors %}
+               {{ form.profile_picture(class="form-control is-invalid") }}
+                  <div class="text-danger small">{{ form.profile_picture.errors[0] }}</div>
+                {% else %}
+                  {{ form.profile_picture(class="form-control") }}
+            {% endif %}
+         </div>
+      </div>
+      <div class="row mt-3">
+         <div class="d-flex justify-content-end">
+            {{ form.submit(class="btn btn-success w-sm-100") }}
+         </div>
+      </div>
+   </form>
+</div>
+<div class="line-with-text mt-5">
+   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+{% endblock main_content %}
