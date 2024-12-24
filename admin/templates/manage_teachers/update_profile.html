@@ -46,15 +46,15 @@
    </div>
  {% endif %}
 {% endwith %}
-<div class="update-form bg-white pb-3 shadow-sm border">
-   <div class="bg-success text-white d-flex align-items-center
+<div class="update-form bg-white p-3 shadow-sm border">
+   <div class="c-success rounded-1 text-white d-flex align-items-center
       justify-content-center" style="height: 36px">
       <h6 class="text-center fw-bold">
          <i class="fa fa-laptop mx-2" aria-hidden="true"></i>Update Profile
       </h6>
    </div>
    <form method="POST" enctype="multipart/form-data" 
-      action="" class="px-4 mt-4">
+      action="" class="px-2 mt-3">
       {{ form.hidden_tag() }}
       <div class="row">
          <div class="col-12 col-md-6 mb-3">
@@ -146,7 +146,7 @@
       </div>
    </form>
 </div>
-<div class="line-with-text mt-5">
+<div class="line-with-text mt-4">
    <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
 </div>
 {% endblock main_content %}

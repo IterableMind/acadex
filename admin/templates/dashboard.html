@@ -21,7 +21,7 @@
           <span class="">Manage Teachers</span>
         </div>
       </a>
-      <a href="">
+      <a href="{{ url_for('admin_bp.school_setup') }}">
         <div class="d-flex link__width">
           <i class="material-icons">settings</i>
           <span class="">School Settings</span>
@@ -40,7 +40,10 @@
         <div class="bg-white shadow-sm rounded w-100">
           <div class="user-info d-flex p-2">
             {% if current_user.teacher.passport_filename %}
-            <div class="profile-lg" style="background-image: url('{{ url_for('static', filename='images/profile-pictures/{0}'.format(current_user.teacher.passport_filename)) }}');">
+            <div class="profile-lg" style="background-image:
+             url('{{ url_for('static', 
+             filename='images/profile-pictures/{0}'.format(current_user.teacher.passport_filename)) }}')"
+             >
             </div>
             {% else %}
             <div class="profile-lg shadow-sm" style="background-image: url('{{ url_for('static', filename='images/profile-pictures/default.JPG')}}');">

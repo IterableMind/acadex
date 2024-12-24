@@ -1,0 +1,58 @@
+{% extends "manage_teachers/layout.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+   <!-- Teacher management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="">
+         <div class="d-flex link__width sub--link--active">
+            <i class="material-icons">visibility</i>
+            <span class="">View teachers</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_teacher') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add teacher</span>
+         </div>
+      </a>
+      <a href="">
+         <div class="d-flex link__width">
+            <i class="material-icons">assignment_ind</i>
+            <span class="">Asign roles</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.update_profile') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">security_update_good</i>
+            <span class="">Update profile</span>
+         </div>
+      </a>
+   </div> 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %}
+<div class="w-100 shadow-sm p-3 bg-white mt-3">
+   <!-- Flashed Messages -->
+   {% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+     <div class="alert-container">
+       {% for category, message in messages %}
+         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+           {{ message }}
+           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+         </div>
+       {% endfor %}
+     </div>
+   {% endif %}
+ {% endwith %}
+
+ {% if teachers %}
+  {% block display %}<!-- Display teachers -->{% endblock %}
+ {% endif %}
+</div>
+<div class="line-with-text mt-4">
+   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+{% endblock main_content %}

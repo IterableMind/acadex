@@ -33,7 +33,7 @@
 
 <!-- Main content area -->
 {% block main_content %}
- <div class="container-fluid">
+<div class="container-fluid">
    <div class="accordion-item bg-white p-2 shadow-sm">
       <h2 class="accordion-header" id="flush-headingThree">
         <button class="accordion-button collapsed" 
@@ -58,47 +58,34 @@
       </div>
     </div>
  </div>
-<div class="w-100 shadow-sm p-3 bg-white mt-3">
+<div class="container pt-1 pb-3 bg-light mt-1">
  {% block display%}
-   <div class="table-responsive">
-      <div class="d-flex justify-content-end">
-         <button class="btn btn-danger btn-sm">
-            <a href="" class="a-style"></a>
-               <span><i class="fas fa-print mx-2"></i>Print</span>
-            </a>
-         </button>
-         <button class="btn btn-success text-white btn-sm mx-2">
-            <a href="" class="a-style">
-               <span><i class="fas fa-download mx-2"></i>Download PDF</span>
-            </a>
-         </button>
+ <div class="row d-flex justify-content-center">
+   <h6 class="text-muted text-center">
+      Showing all teachers in a detailed view.
+   </h6>
+   {% for teacher in teachers %}
+      <div class="col-md-5 bg-white shadow-sm mx-2 mt-2 p-2 rounded-1">
+         <div class="d-flex justify-content-center">
+            <div class="profile-xlg" style="background-image: 
+            url('{{ url_for('static', 
+            filename='images/profile-pictures/{0}'.format(teacher.passport_filename)) }}');"
+            >
+            </div>
+         </div>
+         <div class="w-100 text-center">
+            <h6 class="mt-2 text-c-muted">
+                {{ teacher.teacher_name }}
+                (<span class="text-danger">{{ teacher.role }}</span>)
+            </h6>
+            <p>
+               Username: <span class="text-muted">{{ teacher.user[0].username }}</span>
+            </p>
+            <p>Phone: <span class="fw-bold">{{ teacher.phone_no }}</span></p>
+         </div>
       </div>
-      <table class="table table-sm table table-bordered table-hover mt-2">
-         <caption class="mt-2">
-            <small>Total Number of Teachers {{ teachers | length() }} </small>
-         </caption>
-         <thead>
-            <tr>
-               <th style="width: 7px">S/N</th>
-               <th style="width: 90px">Teacher Name</th> 
-               <th style="width: 60px">Phone</th>
-               <th style="width: 100px">Email</th>
-               <th style="width: 100px">TSC No</th>
-            </tr>
-         </thead>
-         <tbody>
-            {% for teacher in teachers %}
-               <tr>
-                  <td style="width: 7px;">{{ loop.index }}</td>
-                  <td style="width: 90px">{{ teacher.teacher_name }}</td> 
-                  <td style="width: 60px">{{ teacher.phone_no }}</td>
-                  <td style="width: 100px">{{ teacher.email | default('--', True) }}</td>
-                  <td style="width: 100px">{{ teacher.tsc_no | default('--', True) }}</td>
-               </tr>
-            {% endfor %}
-         </tbody>
-      </table>
-   </div>
+   {% endfor %}
+</div>
  {% endblock display%}
 </div>
 <!-- Footer -->

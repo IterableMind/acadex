@@ -2,10 +2,10 @@
 Define routes for adminitrative roles only.
 """
 
-from flask import render_template, url_for, flash, redirect, current_app
+from flask import render_template, url_for, flash, redirect, current_app, request
 from . import admin_bp
-from .forms import SchoolInfoForm, SearchStudent, TeacherForm, UpdateForm 
-from ..models import db, SchoolInfo, Teacher, User 
+from .forms import SchoolInfoForm, SearchStudent, TeacherForm, UpdateForm, StreamForm, GradeForm 
+from ..models import db, SchoolInfo, Teacher, User, Grade, Stream
 from ..utils.utils import generate_username
 from ..utils.image_processor import preprocess_image as img_editor 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -76,8 +76,6 @@ def school_info():
 def view_teachers():
     try: 
         all_teachers = Teacher.query.all()
-
-        # Flash a message if no teachers are found
         if not all_teachers:
             flash('No records of teachers are present!', 'info')
     except SQLAlchemyError as e:
@@ -92,8 +90,6 @@ def view_teachers():
         title='View Teachers',
         teachers=all_teachers
     ) 
-
-
 
 
 @admin_bp.route('/add-teacher', methods=['GET', 'POST'])
@@ -211,6 +207,34 @@ def update_profile():
         form=form, 
         title='Update Profile'
     )
+
+
+@admin_bp.route('/classic-view')
+@login_required
+def teachers_classic_view():
+    return render_template(
+        'manage_teachers/classic_teachers_view.html', 
+        t_active=ACTIVE,
+        teachers=Teacher.query.all(),
+        title='Classic Teachers View'
+    )
+
+
+@admin_bp.route('/school-setup', methods=['GET', 'POST'])
+@login_required
+def school_setup(): 
+    form = GradeForm()
+    return render_template(
+        'school_setup.html',
+        form=form,
+        d_active=ACTIVE, 
+        title='Schoo Setup'
+    )
+
+
+
+
+
 
 # Logout user
 @admin_bp.route('/logout')

@@ -255,6 +255,16 @@
   background-repeat: no-repeat;
 }
 
+.profile-xlg {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .profile-sm {
   background-color: rgb(232 232 232);
   width: 43px;
@@ -271,4 +281,26 @@
 .card-link a {
   color: green;
   font-weight: 900;
+}
+
+.accordion-button {
+  box-shadow: none !important; /* Removes the shadow */
+  outline: none !important;
+  border: none !important; 
+  background-color: #fff;
+}
+
+.accordion-button:not(.collapsed) {
+  color: black !important;
+  background-color: #fff !important;
+}
+
+.text-c-muted {
+  color: rgb(150 150 150 / 75%);
+}
+
+@media (max-width: 768px) {
+  .nav-tabs {
+    display: block !important;
+  }
 }

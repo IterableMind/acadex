@@ -3,7 +3,7 @@ from .auth import auth_bp
 from .admin import admin_bp
 from .teachr import teachr_bp
 from .config import Config
-from .models import db, SchoolInfo, Teacher, User
+from .models import db, SchoolInfo, Teacher, User, Grade
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
@@ -55,5 +55,12 @@ def create_app():
   # Create all database tables if they do not already exist
   with app.app_context():
     db.create_all()
+    # Add grades to the database
+    grades = [Grade(grade_name=f'Grade {i}') for i in range(1, 10)]
+    try:
+      db.session.add_all(grades)
+      db.session.commit()
+    except:
+      pass
 
   return app

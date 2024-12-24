@@ -9,7 +9,9 @@ from wtforms import (
     RadioField, 
     SelectField,
     FileField,
-    PasswordField
+    PasswordField,
+    FieldList,
+    FormField
 )
 from wtforms.validators import (
     DataRequired, 
@@ -215,3 +217,38 @@ class UpdateForm(FlaskForm):
         ]
     )
     submit = SubmitField('Update')
+
+
+class StreamForm(FlaskForm):
+    name = StringField(
+                'Stream Name', 
+                validators=[
+                    DataRequired(message='You must enter the name of the stream to add.')
+                ]
+            )
+
+
+class GradeForm(FlaskForm):
+    grade_name = SelectField(
+        'Grade',
+        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)],
+        validators=[DataRequired(message='Please select a grade.')]
+    )
+    stream1 = StringField(
+        'Stream 1',
+         render_kw={"placeholder": "Enter stream 1 name"}
+        )
+    stream2 = StringField(
+        'Stream 2',
+         render_kw={"placeholder": "Enter stream 2 name"}
+        )
+    stream3 = StringField(
+        'Stream 3',
+         render_kw={"placeholder": "Enter stream 3 name"}
+        )
+    
+    submit = SubmitField('Add')
+
+    def validate_grade_name(self, field):
+        if field.data == '':
+            raise ValidationError('Please select a valid grade.')
