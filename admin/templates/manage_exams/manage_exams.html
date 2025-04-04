@@ -1,0 +1,226 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.add_new_exam') }}">
+        <div class="d-flex link__width">
+          <i class="fa fa-plus-circle"></i>
+          <span class="">Add new Exam</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.admin_marks_entry') }}">
+        <div class="d-flex link__width">
+          <i class="fa fa-circle"></i>
+          <span class="">Enter Marks</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.manage_exams') }}">
+        <div class="d-flex link__width sub--link--active">
+            <i class="fa fa-gear"></i>
+            <span>Manage Exams</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.generate_report_forms') }}" id="report-forms" class="x">
+        <div class="d-flex link__width">
+            <i class="fa fa-file"></i>
+            <span>Report Forms</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+<!-- Flashed Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+{% if messages %}
+  <div class="alert-container">
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+ {% endif %}
+{% endwith %}
+ <div class="container bg-white pb-3">
+  <h5 class="text-center pt-2 pb-2"><i class="fa fa-gear"></i> Manage Exams</h5>
+  <div class="container">
+   <div class="table-responsive">
+     {% if all_exams %}
+       <table class="table table-bordered border">
+         <thead>
+           <tr>
+             <th>#</th>
+             <th class="border">Examination name</th>
+             <th class="border text-center">Term</th>
+             <th class="text-center">Date created</th>
+             <th class="border">Status</th>
+             <th class="text-center">Action</th>
+           </tr>
+         </thead>
+         <tbody>
+           {% for exam in all_exams %}
+             {% if exam.status == 'closed' %}
+             {% set class_row = 'table-warning' %}
+             {% else %}
+               {% set class_row = 'table-success' %}
+             {% endif %}
+             <tr class="{{ class_row }}">
+               <td class="width: 1%">{{ loop.index }}</td>
+               <td class="examination-name">{{ exam.name }}</td> 
+               <td>{{ exam.term }} ({{ exam.year }})</td> 
+               <td class="term-data d-none">{{ exam.term }}</td>
+               <td>{{ exam.created_at.strftime('%Y-%m-%d') }}</td>
+               <td>{{ exam.status }}</td>
+               <td class="d-flex">
+                 <form action="{{ url_for('admin_bp.toggle_exam_status') }}" 
+                   method="post"
+                   id="exam-status-form"
+                   data-exams="{{ all_exams | join(',') }}">
+                   <input type="text" class="d-none" value="{{ exam.name }}" name="exam-name">
+                   <input type="text" class="d-none" value="{{ exam.status }}" name="exam-status">
+                   {% if exam.status == "open" %}
+                     <button class="btn btn-sm btn-secondary">
+                       <i class="fa fa-book"></i> Publish
+                     </button>
+                   {% else %}
+                     <button class="btn btn-sm btn-success">
+                      <i class="fa fa-refresh"></i> Unpublish
+                     </button>
+                   {% endif %}
+                 </form>
+                 <form action="" class="mx-1">
+                   <input type="text" class="d-none" value="{{ exam.name }}" name="del-exam-name">
+                   <button type="button" class="btn btn-sm btn-danger btn-del-exam"
+                   data-bs-toggle="modal" data-bs-target="#deleteModel">
+                     <i class="fa fa-trash"></i> delete
+                   </button>
+                 </form>
+                 <button class="btn btn-sm btn-primary btn-edit-exam" data-bs-toggle="modal" data-bs-target="#editExamModel">
+                  <i class="fa fa-pencil"></i> Edit
+                 </button>
+               </td>
+             </tr>
+           {% endfor %}
+         </tbody>
+       </table>
+     {% else %}
+       <div class="alert alert-warning">
+         <h4>No Examination found on the system</h4>
+       </div>
+     {% endif %}
+   </div>
+  </div>
+
+  <div class="line-with-text mt-5">
+    <small class="text-muted">Acadex &copy;2025 Developed by Oyaro Jared</small>
+ </div>
+
+  <!-- Warning Modal for exam deletion -->
+  <div class="modal fade" id="deleteModel" tabindex="-1" 
+    aria-labelledby="warningModalLabel"   aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="warningModalLabel">
+            <i class="fa fa-warning"></i> Warning
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{{ url_for('admin_bp.delete_exam') }}" method="post">
+            <input type="text" id="delete-hidden-exam-name" name="delete-exam-name" class="d-none">
+              Are you sure you want to delete <span id="del-exam-name" class="fw-bold"></span>?
+              <div class="mt-2 d-flex justify-content-end border-top mt-2 pt-2">
+                <button type="button" class="btn btn-secondary" 
+                data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger mx-2">
+                <i class="fa fa-trash"></i> Delete</button>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam Editing modal -->
+  <div class="modal fade modal-lg" id="editExamModel" tabindex="-1"    aria-labelledby="manageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header has-background-primary text-white"
+          style="height: 50px !important;">
+          <h6 class="modal-title" id="manageModalLabel">
+           <i class="fa fa-pencil"></i> Edit Examination 
+            <span id="modal-teacher-name"></span>
+          </h6>
+          <button type="button" class="btn-close" id="btn-close"
+           data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <h6 class="text-center"><span id="modal-teacher-name"></span></h6>  
+          <form action="{{ url_for('admin_bp.edit_exam_data') }}" method="post" class="px-4">
+           <h5 class="text-center">Update Examination Information</h5>
+           <input type="text" id="exam-id" class="d-none" name="hidden-exam-name">
+           <div class="field">
+            <label class="label">Exam Name</label>
+            <div class="control has-icons-left">
+              <input type="text" class="input is-primary" id="exam-name" name="exam-name">
+              <span class="icon is-small is-left">
+                <i class="fas fa-file-alt"></i> <!-- Exam-related icon -->
+              </span>
+            </div>
+          </div>  
+           <div class="field">
+            <label class="label">Term Info</label>
+            <div class="control has-icons-left">
+              <input type="text" class="input is-primary" id="term-info" name="term-info">
+              <span class="icon is-small is-left">
+                <i class="fas fa-calendar-alt"></i> <!-- Calendar icon for term info -->
+              </span>
+            </div>
+          </div>
+           <div class="mt-3 d-flex justify-content-end">
+           <button type="button" class="btn btn-danger" 
+            data-bs-dismiss="modal" id="btn-reload">
+                Close
+            </button>
+            <button type="submit" class="btn btn-success mx-2">Save</button>
+           </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+   document.addEventListener("DOMContentLoaded", function() {
+     var reportForms = document.getElementById('report-forms');
+     var examStatusForm = document.getElementById('exam-status-form');
+     var allExams = examStatusForm.getAttribute("data-exams").split(",");
+
+    //  Handle delete exam
+    const deleteExamButtons = document.querySelectorAll('.btn-del-exam');
+    deleteExamButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        var examName = this.closest('tr').querySelector('.examination-name').textContent.trim(); 
+        document.getElementById('delete-hidden-exam-name').value = examName
+        document.getElementById('del-exam-name').textContent = examName
+      })
+    })
+ 
+    // Handle Exam editing
+    const editExamButtons = document.querySelectorAll('.btn-edit-exam')
+    editExamButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        var examName = this.closest('tr').querySelector('.examination-name').textContent.trim();
+        document.getElementById('exam-name').value = examName;
+        document.getElementById('term-info').value = document.querySelector('.term-data').textContent;
+        document.getElementById('exam-id').value = examName;
+      });
+    });
+
+   });
+  </script>
+ </div>
+{% endblock main_content %}

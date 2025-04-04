@@ -61,20 +61,119 @@ class User(db.Model, UserMixin):
 
 class Grade(db.Model):
     __tablename__ = 'grades'
+    
     id = db.Column(db.Integer, primary_key=True)
     grade_name = db.Column(db.String(50), unique=True, nullable=False)
-
-    # One-to-One relationship with Stream
-    stream = db.relationship('Stream', backref='grade', uselist=False, lazy=True)
+    # One-to-Many relationship with Stream
+    streams = db.relationship('Stream', backref='grade', lazy=True)
 
     def __repr__(self):
         return f'<Grade {self.grade_name}>'
 
+
 class Stream(db.Model):
     __tablename__ = 'streams'
     id = db.Column(db.Integer, primary_key=True)
-    stream_name = db.Column(db.String(50), nullable=False)
-    grade_id = db.Column(db.Integer, db.ForeignKey('grades.id'), unique=True, nullable=False)
+    stream_name = db.Column(db.String(50), nullable=True) 
+    grade_id = db.Column(db.Integer, db.ForeignKey('grades.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Stream(s) {self.stream_name} of Grade ID {self.grade_id}>'
+        return str(self.stream_name)
+
+
+class Student(db.Model):
+    __tablename__ = 'students'
+    
+    id = db.Column(db.Integer, primary_key=True)   
+    fullname = db.Column(db.String(50), nullable=False)   
+    grade = db.Column(db.String(10), nullable=False)  
+    dob = db.Column(db.Date, nullable=False)   
+    photo = db.Column(db.String(255), nullable=True)   
+    adm_no = db.Column(db.String(20), unique=True, nullable=False)  
+    adm_date = db.Column(db.Date, nullable=False)   
+    gender = db.Column(db.String(10), nullable=False)  
+    stream = db.Column(db.String(50), nullable=True)   
+    previous_school = db.Column(db.String(100), nullable=True)   
+    parent_name = db.Column(db.String(50), nullable=False)   
+    relationship = db.Column(db.String(30), nullable=False)   
+    contact_phone = db.Column(db.String(15), nullable=False)   
+    id_no = db.Column(db.Integer, nullable=False)   
+    email = db.Column(db.String(120), nullable=True)  
+    health_info = db.Column(db.Text, nullable=True)  
+
+    def __repr__(self):
+        return f'<Student {self.fullname} (Grade: {self.grade})>'
+    
+
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)   
+    subject = db.Column(db.String(100), nullable=False)  
+
+
+class Roles(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(50), default='Teacher')
+    grade = db.Column(db.String(50), default=None)
+    stream = db.Column(db.String(50), default=None)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), 
+                 nullable=False) 
+    teacher = db.relationship("Teacher", backref="duty")
+
+
+class TeacherSubjectAssignment(db.Model):
+    __tablename__ = 'teacher_subject_assignments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
+    grade = db.Column(db.String(50), nullable=False)  
+    stream = db.Column(db.String(50), nullable=True)  # Stream can be NULL if not provided
+
+    # Relationships
+    teacher = db.relationship("Teacher", backref="assigned_subjects")
+    subject = db.relationship("Subject", backref="teacher_assignments") 
+
+    def teaching_sub(self):
+        return self.subject.subject
+    
+    def teaching_grade(self):
+        return self.grade
+    
+    def teaching_stream(self):
+        return self.stream
+    
+    def __repr__(self): 
+        return f"{self.subject.subject} ({self.grade}  {self.stream})"
+    
+    
+class Exam(db.Model):
+    __tablename__ = 'exams'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # e.g., "Term 1 Exam 2025"
+    term = db.Column(db.String(20), nullable=False)  # e.g., "Term 1"
+    year = db.Column(db.Integer, nullable=False)  # e.g., 2025
+    status = db.Column(db.Enum('open', 'closed', name='exam_status_enum'), default='open', nullable=False)  
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    def __repr__(self):
+        return f"{self.name} ({self.term} {self.year})"
+ 
+
+
+class ExamMarks(db.Model):
+    __tablename__ = 'exam_marks'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exams.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
+    marks = db.Column(db.Float, nullable=True)  # Can be NULL if not entered
+    
+    # Relationships
+    exam = db.relationship('Exam', backref='marks')
+    student = db.relationship('Student', backref='marks')
+    subject = db.relationship('Subject', backref='marks')
+
+    def __repr__(self):
+        return f"<Marks: {self.marks} for {self.student.fullname} in {self.subject.subject} ({self.exam.name})>"

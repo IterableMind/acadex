@@ -9,7 +9,7 @@
         <span>Home</span>
       </div>
     </a>
-     <a href="{{ url_for('admin_bp.school_info') }}">
+     <a href="{{ url_for('admin_bp.update_sch_info') }}">
         <div class="d-flex link__width">
           <i class="material-icons">apartment</i>
           <span>Manage Sch Info</span>
@@ -74,7 +74,7 @@
             </div>
             <div class="card-label mx-5 w-75">
               <h6 class="text-center fw-bold has-text-primary">No of Students</h6>
-              <h5 class="text-center text-muted">560</h5>
+              <h5 class="text-center text-muted">{{ students_count }}</h5>
             </div>
             <div class="card-link d-flex justify-content-end w-25">
               <a href="">

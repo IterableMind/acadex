@@ -1,0 +1,76 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.printouts') }}">
+        <div class="d-flex link__width sub--link--active">
+          <i class="material-icons">print</i>
+          <span class="">Printouts</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_student') }}">
+        <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add student</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% include "search_student.html" %}
+  {% block student_display %}{% endblock student_display %}
+
+  <h5 class="text-center fw-light mt-3">
+    <i class="fas fa-list"></i> Class Lists
+  </h5>
+
+  <!-- Group students by grade and stream -->
+  <div class="container bg-white p-3 shadow-sm mt-3 rounded-2">
+    {% set grouped_students = {} %}
+
+    {% for student in students %}
+      {% set key = (student.grade, student.stream) %}
+      {% if key not in grouped_students %}
+        {% set _ = grouped_students.__setitem__(key, []) %}
+      {% endif %}
+      {% set _ = grouped_students[key].append(student) %}
+    {% endfor %}
+
+    {% for (grade, stream), student_list in grouped_students.items() %}
+      <div class="mx-5">
+        <div class="d-flex align-items-center my-3">
+          <hr style="flex-grow: 1; border: 1px solid #2cd4c4;">
+          <h6 class="text-center mx-3 fw-bold" style="color: #2cd4c4;">
+              {{ grade }} {% if stream %} - {{ stream }} {% endif %} Students
+          </h6>
+          <hr style="flex-grow: 1; border: 1px solid #2cd4c4;">
+        </div>      
+        <div class="card-body table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Parent Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for student in student_list %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ student.fullname }}</td>
+                  <td>{{ student.gender }}</td>
+                  <td>{{ student.contact_phone }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock main_content %}

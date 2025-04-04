@@ -1,0 +1,309 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+<div class="container d-flex links align-items-center">
+  <a href="{{ url_for('admin_bp.add_new_exam') }}">
+    <div class="d-flex link__width">
+      <i class="fa fa-plus-circle"></i>
+      <span class="">Add new Exam</span>
+    </div>
+  </a>
+  <a href="{{ url_for('admin_bp.admin_marks_entry') }}">
+    <div class="d-flex link__width sub--link--active">
+      <i class="fa fa-circle"></i>
+      <span class="">Enter Marks</span>
+    </div>
+  </a>
+  <a href="{{ url_for('admin_bp.manage_exams') }}">
+    <div class="d-flex link__width">
+      <i class="fa fa-gear"></i>
+      <span>Manage Exams</span>
+    </div>
+  </a>
+  <a href="{{ url_for('admin_bp.generate_report_forms') }}" id="report-forms" class="x">
+    <div class="d-flex link__width">
+        <i class="fa fa-file"></i>
+        <span>Report Forms</span>
+    </div>
+  </a>
+</div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+<!-- Flashed Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+{% if messages %}
+  <div class="alert-container">
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+ {% endif %}
+{% endwith %}
+<div class="container bg-white p-2">
+  <div class="d-flex align-items-center bg-white p-2">
+    <hr class="flex-grow-1">
+    <h5 class="mx-3 fw-light">Marks entry for {{ open_exam }} Status</h5>
+    <hr class="flex-grow-1">
+  </div>
+  <div class="container px-5">
+      {% if grades_without_marks %}
+        <table class="table table-bordered">
+          <thead class="border">
+            <tr>
+              <th class="border">Grade</th>
+              <th class="text-center">Subjects Pending Marks</th>
+              <th class="border">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grade, subjects in grades_without_marks.items() %}
+              <tr>
+                <td>{{ grade }}</td>
+                <td>
+                  {% for subject in subjects %}
+                    {% if subject == "Pre-Technical Studies" and grade != "Grade 7" %}
+                    {% else %}
+                      <span class="badge bg-warning text-dark">{{ subject }}</span>
+                    {% endif %}
+                  {% endfor %}
+                </td>
+                <td>
+                  <button
+                    id="btn-submit-data"
+                    class="btn btn-success btn-sm" 
+                    data-bs-toggle="modal"  
+                    data-bs-target="#enterMarksModal"
+                    data-grade="{{ grade }}" data-subjects="{{ subjects | join(',') }}">
+                      Enter Marks
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-success">All grades have marks entered.</p>
+      {% endif %}
+  </div>
+
+  <!-- Large Centered Bootstrap Modal -->
+  <div 
+    class="modal fade" 
+    id="enterMarksModal" 
+    tabindex="-1" 
+    aria-labelledby="enterMarksModalLabel" 
+    aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header text-white has-background-primary">
+            <h5 class="modal-title fw-bold" id="enterMarksModalLabel">
+              Enter Marks for <span id="gradeTitle"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            </button>
+          </div>
+            <div class="modal-body bg-white">
+              <form id="marksEntryForm" method="POST" 
+                action="{{ url_for('admin_bp.save_marks') }}">
+                  <input type="hidden" id="gradeInput" name="grade">
+                  <!-- Stream Selection (Hidden until grade with streams is selected) -->
+                  
+                  <div class="row">
+                    <div class="col-12 col-md-6">
+                      <!-- Subject Selection -->
+                      <div class="mb-2">
+                        <label for="subjectSelect" class="form-label fw-bold">Select Subject</label>
+                        <select id="subjectSelect" class="form-select" name="subject">
+                            <!-- Options populated dynamically -->
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="mb-2 d-none" id="streamContainer">
+                        <label for="streamSelect" class="form-label fw-bold">Select Stream</label>
+                        <select id="streamSelect" class="form-select" name="stream">
+                            <!-- Streams populated dynamically -->
+                        </select>
+                      </div>
+                    </div>
+                    <hr>
+                </div>                
+            
+                  <!-- Student Marks Table -->
+                  <div id="studentsTableContainer" class="d-none">
+                      <h5 class="fw-light text-center">Students List</h5>
+                      <div class="table-responsive">
+                        <table class="table table-hover table-bordered mx-auto" style="max-width: 1000px; width: 100%;">
+                          <thead class="border">
+                            <tr>
+                              <th>#</th>
+                              <th class="border">Student Name</th>
+                              <th>Marks</th>
+                            </tr>
+                          </thead>
+                          <tbody id="studentsTableBody">
+                            <!-- Student rows will be inserted here dynamically -->
+                          </tbody>
+                        </table>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-success mt-3">Save Marks</button>
+              </form>
+            </div>
+        </div>
+      </div>
+  </div>
+</div>
+<style>
+  /* Ensure modal takes a reasonable height */
+  .modal-dialog {
+    max-height: 90vh; /* Adjust modal height */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Fix modal header */
+  .modal-header {
+    position: sticky;
+    top: 0;
+    height: 40px !important;
+    z-index: 3;
+    /* background: rgb(93, 188, 144); */
+  }
+  
+  /* Make only the table body scrollable */
+  #studentsTableContainer {
+    max-height: 50vh; /* Adjust height as needed */
+    overflow-y: auto;
+  }
+  
+  /* Keep the table header fixed */
+  #studentsTableContainer thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+  }
+  
+  /* Ensure the table takes full width */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  </style>
+  
+<script>
+   document.addEventListener("DOMContentLoaded", function() {
+    var enterMarksModal = document.getElementById("enterMarksModal");
+    var streamContainer = document.getElementById("streamContainer");
+    var streamSelect = document.getElementById("streamSelect");
+
+    enterMarksModal.addEventListener("show.bs.modal", function(event) {
+        var button = event.relatedTarget;
+        var grade = button.getAttribute("data-grade");
+        var subjects = button.getAttribute("data-subjects").split(",");
+
+        document.getElementById("gradeInput").value = grade;
+        document.getElementById("gradeTitle").textContent = grade;
+
+        var subjectSelect = document.getElementById("subjectSelect");
+        subjectSelect.innerHTML = ""; // Clear previous options
+
+        subjects.forEach(function(subject) {
+            var option = document.createElement("option");
+            option.value = subject;
+            option.textContent = subject;
+            subjectSelect.appendChild(option);
+        });
+
+        // Fetch streams using the existing "/get_streams" endpoint
+        fetch("{{ url_for('admin_bp.get_streams') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json", 
+            },
+            body: JSON.stringify({ selectedValue: grade }) // Send JSON body
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                streamContainer.classList.remove("d-none");
+                streamSelect.innerHTML = ""; // Clear existing options
+
+                data.forEach(function(stream) {
+                    var option = document.createElement("option");
+                    option.value = stream;
+                    option.textContent = stream;
+                    streamSelect.appendChild(option);
+                });
+
+                // Automatically fetch students when a stream is selected
+                streamSelect.addEventListener("change", function() {
+                    fetchStudents(grade, streamSelect.value);  
+                });
+
+            } else {
+                streamContainer.classList.add("d-none"); // Hide stream selection if no streams
+                fetchStudents(grade, null); // Fetch all students if no streams exist
+            }
+        })
+        .catch(error => console.error("Error fetching streams:", error));
+    });
+
+    function fetchStudents(grade, stream) {
+        fetch("{{ url_for('admin_bp.get_students') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ grade: grade, stream: stream }) // Send JSON body
+        })
+        .then(response => response.json())
+        .then(data => {
+            var studentsTable = document.getElementById("studentsTableContainer");
+            var studentsBody = document.getElementById("studentsTableBody");
+            studentsBody.innerHTML = ""; // Clear existing rows
+
+            if (data.length > 0) {
+                studentsTable.classList.remove("d-none");
+
+                data.forEach(function(student, index) {
+                    var row = document.createElement("tr");
+                    row.innerHTML = ` 
+                        <td style="width: 1%">${index + 1}</td>
+                        <td>${student.fullname}</td> 
+                        <td>
+                          <input 
+                            type="number" 
+                            class="form-control bg-light" 
+                            style="max-width: 80px" 
+                            name="marks[${student.adm_no}]" 
+                            min = 0
+                            max = 100
+                            oninput="this.value=this.value.slice(0,3)"
+                            required>
+                        </td>
+                    `;
+                    studentsBody.appendChild(row);
+                });
+            } else {
+                studentsTable.classList.add("d-none");
+            }
+        })
+        .catch(error => console.error("Error fetching students:", error));
+    }
+});
+
+</script>
+
+{% endblock main_content %}

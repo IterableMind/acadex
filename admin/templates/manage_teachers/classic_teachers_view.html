@@ -16,10 +16,10 @@
             <span>Add teacher</span>
          </div>
       </a>
-      <a href="">
+      <a href="{{ url_for('admin_bp.assign_teacher_roles') }}">
          <div class="d-flex link__width">
             <i class="material-icons">assignment_ind</i>
-            <span class="">Asign roles</span>
+            <span class="">Manage Teachers</span>
          </div>
       </a>
       <a href="{{ url_for('admin_bp.update_profile') }}">
@@ -44,7 +44,8 @@
       </h2>
       <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
         <div class="accordion-body bg-white pt-3">
-            <a href="{{ url_for('admin_bp.view_teachers') }}">
+            <a href="{{ url_for('admin_bp.view_teachers') }}" 
+               style="text-decoration: none;">
                <button class="btn btn-danger btn-sm">
                   <i class="fa fa-print"></i> Print View
                </button>
@@ -65,7 +66,7 @@
       Showing all teachers in a detailed view.
    </h6>
    {% for teacher in teachers %}
-      <div class="col-md-5 bg-white shadow-sm mx-2 mt-2 p-2 rounded-1">
+      <div class="col-md-5 bg-white shadow-sm mx-2 mt-2 p-3 rounded-1">
          <div class="d-flex justify-content-center">
             <div class="profile-xlg" style="background-image: 
             url('{{ url_for('static', 
@@ -76,12 +77,43 @@
          <div class="w-100 text-center">
             <h6 class="mt-2 text-c-muted">
                 {{ teacher.teacher_name }}
-                (<span class="text-danger">{{ teacher.role }}</span>)
+                (<span class="text-danger">{{ teacher.duty[0] }}</span>)
             </h6>
             <p>
                Username: <span class="text-muted">{{ teacher.user[0].username }}</span>
             </p>
             <p>Phone: <span class="fw-bold">{{ teacher.phone_no }}</span></p>
+            {% if teacher.assigned_subjects %} 
+               <h6 class="fw-bold border-top pt-2">Assigned Teaching Subjects</h6>
+               <table class="table table-bordered text-muted table-sm table-hover">
+                  <thead>
+                     <tr>
+                        <th>#</th>
+                        <th>Subject</th>
+                        <th>Grade</th>
+                        <th>Stream(s)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for sub in teacher.assigned_subjects %} 
+                        <tr>
+                           <td>{{ loop.index }}</td>
+                           <td style="text-align: start;">{{ sub.teaching_sub() }}</td>
+                           <td>{{ sub.teaching_grade() }}</td>
+                           <td>{{ sub.teaching_stream() or '---' }}</td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            {% else %}
+               <div class="container alert alert-danger">
+                  <h6 class="text-center">
+                     This teacher has not been assigned subjects yet!
+                  </h6>
+                  <p>Click <a href="{{ url_for('admin_bp.assign_teacher_roles') }}" class="fw-bold" style="text-decoration: none;">
+                     here</a> to assign</p>
+               </div>
+            {% endif %}
          </div>
       </div>
    {% endfor %}

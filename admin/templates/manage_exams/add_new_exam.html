@@ -1,0 +1,119 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.add_new_exam') }}">
+        <div class="d-flex link__width sub--link--active">
+          <i class="fa fa-plus-circle"></i>
+          <span class="">Add new Exam</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.admin_marks_entry') }}">
+        <div class="d-flex link__width">
+          <i class="fa fa-circle"></i>
+          <span class="">Enter Marks</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.manage_exams') }}">
+        <div class="d-flex link__width">
+            <i class="fa fa-gear"></i>
+            <span>Manage Exams</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.generate_report_forms') }}" id="report-forms" class="x">
+        <div class="d-flex link__width">
+            <i class="fa fa-file"></i>
+            <span>Report Forms</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+ <!-- Flashed Messages -->
+ {% with messages = get_flashed_messages(with_categories=True) %}
+ {% if messages %}
+   <div class="alert-container">
+     {% for category, message in messages %}
+       <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+         {{ message }}
+         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+       </div>
+     {% endfor %}
+   </div>
+  {% endif %}
+ {% endwith %}
+<div class="container mt-3">
+    <div class="border-0 p-2 bg-white p-3"> 
+        <div class="d-flex align-items-center bg-white p-2">
+          <hr class="flex-grow-1">
+          <h5 class="mx-3 fw-light">
+            New Exam Set-up
+          </h5>
+          <hr class="flex-grow-1">
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_bp.add_new_exam') }}" class="needs-validation" novalidate>
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    <label for="exam_name" class="form-label fw-bold">Exam Name</label>
+                    {{ form.exam_name(class="form-control", placeholder="Enter exam name", required=True) }}
+                    <div class="invalid-feedback">Exam name is required.</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="term" class="form-label fw-bold">Term</label>
+                        {{ form.term(class="form-select", required=True) }}
+                        <div class="invalid-feedback">Please select a term.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="year" class="form-label fw-bold">Year</label>
+                        {{ form.year(class="form-control", type="number", placeholder="2025", min="2000", max="2100", required=True) }}
+                        <div class="invalid-feedback">Enter a valid year.</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="exam_type" class="form-label fw-bold">Exam Type</label>
+                        {{ form.exam_type(class="form-select", required=True) }}
+                        <div class="invalid-feedback">Please select an exam type.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="exam_date" class="form-label fw-bold">Exam Date</label>
+                      {{ form.exam_date(class="form-control", type="date", required=True) }}
+                      <div class="invalid-feedback">Please select a valid exam date.</div>
+                    </div>
+                     
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('admin_bp.add_new_exam') }}" class="btn btn-secondary btn-sm">
+                        <i class="fa fa-arrow-left"></i> Back
+                    </a>
+                    {{ form.submit(class="btn btn-success btn-sm") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="line-with-text mt-4">
+  <small class="text-mut fw-bold">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+<script>
+    // Bootstrap Form Validation
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock main_content %}

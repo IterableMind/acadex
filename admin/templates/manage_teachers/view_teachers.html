@@ -16,10 +16,10 @@
             <span>Add teacher</span>
          </div>
       </a>
-      <a href="">
+      <a href="{{ url_for('admin_bp.assign_teacher_roles') }}">
          <div class="d-flex link__width">
             <i class="material-icons">assignment_ind</i>
-            <span class="">Asign roles</span>
+            <span class="">Manage Teachers</span>
          </div>
       </a>
       <a href="{{ url_for('admin_bp.update_profile') }}">
@@ -43,8 +43,8 @@
         </button>
       </h2>
       <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
-        <div class="accordion-body bg-white pt-3">
-            <a href="{{ url_for('admin_bp.view_teachers') }}">
+        <div class="accordion-body bg-white p-2">
+            <a href="{{ url_for('admin_bp.view_teachers') }}" style="text-decoration: none;">
                <button class="btn btn-danger btn-sm">
                   <i class="fa fa-print"></i> Print View
                </button>
@@ -73,8 +73,8 @@
             </a>
          </button>
       </div>
-      <table class="table table-sm table table-bordered table-hover mt-2">
-         <caption class="mt-2">
+      <table class="table table-sm table table-bordered table-hover">
+         <caption style="caption-side: top;">
             <small>Total Number of Teachers {{ teachers | length() }} </small>
          </caption>
          <thead>

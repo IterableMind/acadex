@@ -1,0 +1,135 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.student_dash') }}">
+        <div class="d-flex link__width sub--link--active">
+            <i class="material-icons">house</i>
+            <span class="">Home</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_student') }}">
+        <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add student</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% include "search_student.html" %}
+  {% block student_display %}{% endblock student_display %}
+
+  <!-- Student Information Section -->
+  <div class="container bg-white p-3 shadow-sm mt-3 rounded-2">
+    <h5 class="text-center fw-light">
+      <i class="fa fa-chart-bar"></i> Students Distribution Analysis
+    </h5>
+
+    <!-- Bar Chart for Student Distribution -->
+    <div class="chart-container mt-3 w-75" style="height: 150px;">
+      <canvas id="studentChart"></canvas>
+    </div>
+
+    <div class="row mt-4">
+      {% if student_info %}
+        {% for grade, data in student_info.items() %}
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-body text-center">
+                <h5 class="card-title fw-bold">{{ grade }}</h5>
+                <p class="card-text">
+                  <span style="color: rgba(54, 162, 235, 1); font-weight: bold;">Boys:</span> {{ data.boys }} <br>
+                  <span style="color: rgba(255, 99, 132, 1); font-weight: bold;">Girls:</span> {{ data.girls }} <br>
+                  <span style="font-weight: bold;" class="text-success">Total:</span> 
+                  <span style="font-size: ;">{{ data.total }}</span>
+                </p>
+
+                <!-- Progress Bar -->
+                <div class="progress mt-2">
+                  {% set total = data.boys + data.girls %}
+                  {% if total > 0 %}
+                    {% set boys_percentage = (data.boys / total) * 100 %}
+                    {% set girls_percentage = (data.girls / total) * 100 %}
+                  {% else %}
+                    {% set boys_percentage = 50 %}
+                    {% set girls_percentage = 50 %}
+                  {% endif %}
+                  
+                  <!-- Boys Progress (Blue) -->
+                  <div class="progress-bar" role="progressbar" 
+                       style="width: {{ boys_percentage }}%; background-color: rgba(54, 162, 235, 0.6);" 
+                       aria-valuenow="{{ boys_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ boys_percentage|round(1) }}%
+                  </div>
+
+                  <!-- Girls Progress (Pink) -->
+                  <div class="progress-bar" role="progressbar" 
+                       style="width: {{ girls_percentage }}%; background-color: rgba(255, 99, 132, 0.6);" 
+                       aria-valuenow="{{ girls_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ girls_percentage|round(1) }}%
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-center text-muted">No student data available.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="line-with-text mt-5">
+   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Convert Flask dictionary into JavaScript variables
+  var studentInfo = {{ student_info | tojson }};
+
+  // Extract labels (grades) and data (boys & girls count)
+  var labels = Object.keys(studentInfo);
+  var boysData = labels.map(grade => studentInfo[grade].boys);
+  var girlsData = labels.map(grade => studentInfo[grade].girls);
+
+  // Create the Bar Chart
+  var ctx = document.getElementById('studentChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Boys',
+          data: boysData,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue (Matches Progress Bar)
+          borderWidth: 1
+        },
+        {
+          label: 'Girls',
+          data: girlsData,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)', // Pink (Matches Progress Bar)
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      aspectRatio: 2, // Controls chart height
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+{% endblock main_content %}

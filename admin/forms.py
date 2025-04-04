@@ -10,8 +10,9 @@ from wtforms import (
     SelectField,
     FileField,
     PasswordField,
-    FieldList,
-    FormField
+    EmailField,
+    FileField,
+    DateField
 )
 from wtforms.validators import (
     DataRequired, 
@@ -20,7 +21,8 @@ from wtforms.validators import (
     NumberRange, 
     Optional, 
     Regexp,
-    EqualTo
+    EqualTo,
+    InputRequired
 )
 
 class SearchStudent(FlaskForm):
@@ -30,7 +32,7 @@ class SearchStudent(FlaskForm):
         ]
     )
     search_by = RadioField(
-        "Search",
+        "Search Student",
         choices=[
             ("Enter adm no", "Adm no"),
             ("Enter name", "Name"),
@@ -252,3 +254,186 @@ class GradeForm(FlaskForm):
     def validate_grade_name(self, field):
         if field.data == '':
             raise ValidationError('Please select a valid grade.')
+
+
+class StudentRegistrationForm(FlaskForm):
+    fullname = StringField(
+        "Fullname", 
+        validators=[
+            DataRequired(message='You must enter the fullname of the student.'),
+            Length(
+                min=8, 
+                max=50,
+                message='Student name must be between 8-50 characters long.'
+            )
+        ],
+    render_kw={"placeholder": "Enter student's name"}
+    )
+
+    grade = SelectField(
+        'Grade',
+        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 8)],
+        validators=[InputRequired(message='Please select a grade.')]
+    )
+
+    dob = DateField(
+        "Date of Birth", 
+        format="%Y-%m-%d", 
+        validators=[
+            DataRequired(
+                message='Please Select DOB to continue.'
+            )
+        ]
+    )
+
+    photo = FileField(
+        "Photo", 
+        validators=[Optional()]
+    )
+
+    adm_no = StringField(
+        "Admission Number", 
+        validators=[
+            DataRequired(
+                message='You must enter the student\'s adm no.'
+            )
+        ],
+        render_kw={"placeholder": "Enter Adm no"}
+    )
+
+    adm_date = DateField(
+        "Admission Date", 
+        format="%Y-%m-%d", 
+        validators=[
+            DataRequired(
+                message='Please enter the date the student was admitted.'
+            )
+        ]
+    )
+
+    gender = SelectField(
+        "Gender", choices=[
+            ("Male", "Male"), ("Female", "Female")
+        ], 
+        validators=[
+            DataRequired(message='You must select student\s gender')
+        ]
+    )
+
+    stream = StringField(
+        "Stream", 
+        validators=[Optional()]
+    )
+
+    previous_school = StringField(
+        "Previous School", 
+        validators=[Optional()],
+        render_kw={"placeholder": "Enter previous school"}
+    )
+
+    parent_name = StringField(
+        "Parent/Guardian Name", 
+        validators=[
+            DataRequired(
+                message='Please provide fullname of the parent/guardian.'
+            )
+        ],
+        render_kw={"placeholder": "Parent/Guardian's name"}
+    )
+
+    relationship = StringField(
+        "Relationship with Student", 
+        validators=[
+            DataRequired(
+                message='You must indicate the relationship with the student.'
+            )
+        ],
+        render_kw={"placeholder": "Relationship with student"}
+    )
+
+    contact_phone = StringField(
+        "Contact Information", 
+        validators=[
+            DataRequired(
+                message='Phone number of the parent/guardian must be provided.'
+            )
+        ],
+        render_kw={"placeholder": "07********"}
+    )
+    
+    id_no = IntegerField("ID Number", 
+        validators=[DataRequired(
+            message='Please provide Id no of the parent/guardian.'
+        )],
+        render_kw={"placeholder": "Enter ID no"}
+                    )
+    email = EmailField(
+        "Email", 
+        validators=[Optional(), Email()],
+        render_kw={"placeholder": "Enter Email"}
+    )
+    health_info = TextAreaField(
+        "Health Information", 
+        validators=[Optional()],
+        render_kw={"placeholder": "Information about any chronical illiness"}
+    )
+    submit = SubmitField("Submit")
+
+
+class SubjectForm(FlaskForm):
+    subject = StringField(
+        'Subject',
+        validators = [
+            DataRequired(message='Please enter a subject to add.')
+        ],
+        render_kw={"placeholder": "Enter Subject/Learning Area"}
+    )
+    add = SubmitField("Add Subject")
+
+
+class ExamForm(FlaskForm):
+    exam_name = StringField(
+        'Exam Name',
+        validators=[DataRequired(message="Please enter the exam name.")],
+        render_kw={"placeholder": "Enter exam name"}
+    )
+
+    term = SelectField(
+        'Term',
+        choices=[
+            ('', 'Select Term'),
+            ('1', 'Term 1'),
+            ('2', 'Term 2'),
+            ('3', 'Term 3')
+        ],
+        validators=[DataRequired(message="Please select a term.")]
+    )
+
+    year = IntegerField(
+        'Year',
+        validators=[
+            DataRequired(message="Please enter the exam year."),
+            NumberRange(min=2000, max=2100, message="Enter a valid year.")
+        ],
+        render_kw={"placeholder": "Enter year (e.g., 2025)"}
+    )
+
+    exam_type = SelectField(
+        'Exam Type',
+        choices=[
+            ('', 'Select Exam Type'),
+            ('midterm', 'Midterm'),
+            ('endterm', 'End Term'),
+            ('mocks', 'Mock Exam'),
+            ('assessment', 'Assessment')
+        ],
+        validators=[DataRequired(message="Please select an exam type.")]
+    )
+
+    exam_date = DateField(
+        "Exam Date",
+        validators=[DataRequired(message="Please select the exam date.")],
+        format="%Y-%m-%d"
+    )
+
+    submit = SubmitField("Add Exam")

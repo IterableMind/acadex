@@ -1,0 +1,41 @@
+{% extends "manage_teachers/view_teachers.layout.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+   <!-- Teacher management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.view_subjects') }}">
+         <div class="d-flex link__width {{ view_active }}">
+            <i class="material-icons">visibility</i>
+            <span class="">View Subjects</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_subject') }}">
+         <div class="d-flex link__width {{  add_active }}">
+            <i class="material-icons">add</i>
+            <span>Add New subjects</span>
+         </div>
+      </a>
+   </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+   <!-- Flashed Messages -->
+   {% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+     <div class="alert-container">
+       {% for category, message in messages %}
+         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+           {{ message }}
+           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+         </div>
+       {% endfor %}
+     </div>
+    {% endif %}
+   {% endwith %}
+   {% block sub_content %}
+   {% endblock sub_content %}
+<div class="line-with-text mt-4">
+   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+{% endblock main_content %}

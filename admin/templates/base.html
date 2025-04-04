@@ -16,14 +16,16 @@
       <span class="nav-label">Calendar</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
-      <i class="material-icons">school</i>
-      <span class="nav-label">Grades</span>
+  <li class="{{ sub_active }}">
+    <a href="{{ url_for('admin_bp.view_subjects') }}" 
+     class="text-white text-decoration-none">
+      <i class="material-icons">book</i>
+      <span class="nav-label">Subjects</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
+  <li class="{{ s_active }}">
+    <a href="{{ url_for('admin_bp.student_dash') }}" 
+      class="text-white text-decoration-none">
       <i class="material-icons">diversity_3</i>
       <span class="nav-label">Students</span>
     </a>
@@ -35,10 +37,11 @@
       <span class="nav-label">Teachers</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
-      <i class="material-icons">supervised_user_circle</i>
-      <span class="nav-label">BOM/PTA</span>
+  <li class="{{ g_active }}">
+    <a href="{{ url_for('admin_bp.display_students_per_grade') }}" 
+     class="text-white text-decoration-none">
+      <i class="material-icons">home</i>
+      <span class="nav-label">Grades</span>
     </a>
   </li>
   <li>
@@ -47,8 +50,8 @@
       <span class="nav-label">Staff</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
+  <li class="{{ ex_active }}">
+    <a href="{{ url_for('admin_bp.add_new_exam') }}" class="text-white text-decoration-none">
       <i class="material-icons">analytics</i>
       <span class="nav-label">Exams</span>
     </a>
@@ -60,10 +63,10 @@
     </a>
   </li>
   <hr>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
+  <li class="{{ p_active }}">
+    <a href="{{ url_for('admin_bp.printouts') }}" class="text-white text-decoration-none">
       <i class="material-icons">print</i>
-      <span class="nav-label">Print outs</span>
+      <span class="nav-label">Printouts</span>
     </a>
   </li>
   <li class="mt-4">
@@ -92,11 +95,11 @@
       <i class="material-icons nav__icon">dashboard</i>
       <span class="nav__text">Dashboard</span>
     </a>
-    <a href="#" class="nav__link">
+    <a href="{{ url_for('admin_bp.view_subjects') }}" class="nav__link {{ sub_active }}">
       <i class="material-icons nav__icon">school</i>
-      <span class="nav__text">Grades</span>
+      <span class="nav__text">Subjects</span>
     </a>
-    <a href="#" class="nav__link">
+    <a href="{{ url_for('admin_bp.student_dash') }}" class="nav__link {{ s_active }}">
       <i class="material-icons nav__icon">diversity_3</i>
       <span class="nav__text">Students</span>
     </a>
@@ -105,9 +108,9 @@
       <i class="material-icons nav__icon">cast_for_education</i>
       <span class="nav__text">Teachers</span>
     </a> 
-    <a href="#" class="nav__link">
-      <i class="material-icons nav__icon">unfold_more</i>
-      <span class="nav__text">More</span>
+    <a href="{{ url_for('admin_bp.add_new_exam') }}" class="text-white text-decoration-none">
+      <i class="material-icons">analytics</i>
+      <span class="nav-label">Exams</span>
     </a>
   </nav>
 {% endblock horizontal_nav_sm_screen %}

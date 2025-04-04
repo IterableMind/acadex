@@ -1,0 +1,108 @@
+{% extends "subjects_layout.html" %}
+
+{% block sub_content %}
+ <div class="container bg-white p-3"> 
+  <div class="d-flex align-items-center">
+    <hr class="flex-grow-1">
+    <h6 class="mx-3 text-center fw-light">
+      <i class="fa fa-plus-circle"></i> Add Subject/Learning Area
+    </h6>
+    <hr class="flex-grow-1"> 
+  </div>
+  <div class="form-group">
+    <form action="" method="post">
+      {{ form.hidden_tag() }}
+      <div>
+        <b>{{ form.subject.label }}</b>
+        {{ form.subject(class="input is-primary" + 
+          (' is-danger' if form.subject.errors else '')) }}
+          {% for error in form.subject.errors %}
+            <small class="text-danger">{{ error }}</small>
+          {% endfor %}
+          <div class="justify-content-end d-flex">
+            {{ form.add(class='btn btn-sm btn-success mt-2') }}
+          </div>
+      </div>
+    </form>
+  </div>
+ </div> 
+  {% if all_subjects %}
+    <div class="container bg-white mt-3 p-3" 
+      style="height: 214px; overflow-y: auto;"> 
+      <div class="d-flex align-items-center">
+        <hr class="flex-grow-1">
+        <h6 class="mx-3 text-center fw-light">
+          <i class="fa fa-book"></i> Learning Subjects
+        </h6>
+        <hr class="flex-grow-1"> 
+      </div>
+    <!-- Make sure to make the table responsive -->
+    <table class="table table-bordered text-muted table-sm table-hover">
+      <caption style="caption-side: top;">Total no of Subjects: {{ all_subjects | length }}</caption>
+      <thead class="border">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in all_subjects %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td id="{{ sub.subject }}" class="subject-name">{{ sub.subject }}</td>
+            <td>
+              <button class="btn btn-sm btn-danger btn-delete {{ sub.subject }}" 
+                data-bs-toggle="modal"   data-bs-target="#deleteModel">
+                <i class="fa fa-trash"></i> delete
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% endif %} 
+
+<!-- Warning Modal -->
+<div class="modal fade" id="deleteModel" tabindex="-1" 
+  aria-labelledby="warningModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="warningModalLabel">
+           <i class="fa fa-warning"></i> Warning
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"
+         aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('admin_bp.delete_subject')}}" method="post">
+           <input type="text" id="delete-subject-name" name="delete-subject-name" 
+             style="display: none;">
+            Are you sure you want to delete <span id="del-subject-name" class="fw-bold"></span>?
+            <div class="mt-2 d-flex justify-content-end border-top mt-2 pt-2">
+              <button type="button" class="btn btn-secondary" 
+               data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-danger mx-2">
+               <i class="fa fa-trash"></i> Delete</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Implement deleting subject functionality.
+  document.querySelectorAll('.btn-delete').forEach(button => {
+    button.addEventListener('click', () => {
+      // Collect details of the subject to be deleted.
+      let subject = button.closest('tr').querySelector('.subject-name').textContent.trim();
+      document.getElementById('del-subject-name').textContent = subject;
+      document.getElementById('delete-subject-name').value = subject;
+    });
+  });
+</script>
+
+{% endblock sub_content %}

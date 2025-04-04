@@ -1,6 +1,21 @@
 <!-- Student search form -->
+<div class="container">
+  <!-- Flashed Messages -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+   {% endif %}
+  {% endwith %}
+</div>
 <div class="search-card px-4 pt-2 pb-3 bg-white rounded-2 shadow-sm">
-  <form method="POST" action="">
+  <form method="POST" action="{{ url_for('admin_bp.search_student') }}">
     {{ form.hidden_tag() }}
     <div class="form-group">
       <label class="fw-bold mb-2 has-text-primary">

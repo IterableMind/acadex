@@ -7,6 +7,8 @@ from .models import db, SchoolInfo, Teacher, User, Grade
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
+ 
+
 def create_app():
   "Create app and register blueprints"
   app = Flask(__name__)
@@ -15,6 +17,9 @@ def create_app():
   app.register_blueprint(admin_bp)
   app.register_blueprint(teachr_bp)
   app.config.from_object(Config)
+
+
+
 
   # Initialize the SQLAlchemy db instance with the app
   db.init_app(app)

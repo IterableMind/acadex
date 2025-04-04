@@ -1,0 +1,169 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <!-- Students management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.student_dash') }}">
+        <div class="d-flex link__width">
+            <i class="material-icons">house</i>
+            <span class="">Home</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_student') }}">
+        <div class="d-flex link__width sub--link--active">
+            <i class="material-icons">person_add</i>
+            <span>Add student</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %}
+
+  <!-- Flashed Messages -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+   {% endif %}
+  {% endwith %}
+
+  <div class="container bg-white px-5 pt-3 pb-3 shadow-sm">
+    <div class="container rounded custom-header-bg">
+      <h5 class="text-center text-white p-1">
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        Add new student
+      </h5>
+    </div>
+    <h6 class="fw-light">[Personal Information]</h6>
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="row g-3"> 
+          <div class="col-lg-6">
+            <b>{{ form.fullname.label }}<span class="text-danger"> *</span></b> 
+            {{ form.fullname(id="fullname", class="input is-primary" + 
+            (' is-danger' if form.fullname.errors else '')) }}
+            {% for error in form.fullname.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+          <div class="col-lg-6">
+            <b>{{ form.gender.label }}<span class="text-danger"> *</span></b> 
+            {{ form.gender(class="form-select") }}
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.dob.label }}<span class="text-danger"> *</span></b>  
+            {{ form.dob(id="dob", class="input is-primary" + 
+            (' is-danger' if form.dob.errors else '')) }}
+            {% for error in form.dob.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.photo.label }}</b>
+            {{ form.photo(class="form-control") }}
+          </div>
+          <div class="col-lg-6">
+            <b>{{ form.adm_no.label }}<span class="text-danger"> *</span></b>  
+            {{ form.adm_no(id="adm_no", class="input is-primary" + 
+            (' is-danger' if form.adm_no.errors else '')) }}
+            {% for error in form.adm_no.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.adm_date.label }}<span class="text-danger"> *</span></b>  
+            {{ form.adm_date(id="adm_date", class="input is-primary" + 
+              (' is-danger' if form.adm_date.errors else '')) }}
+              {% for error in form.adm_date.errors %}
+                <small class="text-danger">{{ error }}</small>
+              {% endfor %}
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.grade.label }}<span class="text-danger"> *</span></b>  
+            {{ form.grade(id="grade", class="input is-primary" + 
+              (' is-danger' if form.grade.errors else '')) }}
+              {% for error in form.grade.errors %}
+                <small class="text-danger">{{ error }}</small>
+              {% endfor %}
+          </div> 
+          <div class="col-lg-6" style="display: none; width: 20%;" id="stream-fields">
+            <b>{{ form.stream.label }}</b>   
+            <select id="dynamicSelect" class="form-select" name="streams"></select>
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.previous_school.label }}</b>
+            {{ form.previous_school(class="input is-primary") }}
+          </div>
+
+          <hr style="color: white">
+          <h6 class="fw-light">[Parent Information]</h6> 
+          <div class="col-lg-6">
+            <b>{{ form.parent_name.label }}<span class="text-danger"> *</span></b>  
+            {{ form.parent_name(id="parent_name", class="input is-primary" + 
+            (' is-danger' if form.parent_name.errors else '')) }}
+            {% for error in form.parent_name.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+          <div class="col-lg-6">
+            <b>{{ form.relationship.label }}<span class="text-danger"> *</span></b> 
+            {{ form.relationship(id="relationship", class="input is-primary" + 
+            (' is-danger' if form.relationship.errors else '')) }}
+            {% for error in form.relationship.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div> 
+          <div class="col-lg-6">
+            <b>{{ form.contact_phone.label }}<span class="text-danger"> *</span></b>  
+            {{ form.contact_phone(id="contact_phone", class="input is-primary" + 
+            (' is-danger' if form.contact_phone.errors else '')) }}
+            {% for error in form.contact_phone.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+          <div class="col-lg-6">
+            <b>{{ form.id_no.label }}</b>
+            {{ form.id_no(id="id_no", class="input is-primary" + 
+            (' is-danger' if form.id_no.errors else '')) }}
+            {% for error in form.id_no.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+          <div class="col-lg-6">
+            <b>{{ form.email.label }}</b>
+            {{ form.email(id="email", class="input is-primary" + 
+            (' is-danger' if form.email.errors else '')) }}
+            {% for error in form.email.errors %}
+              <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
+          <div class="col-lg-12">
+            <b>{{ form.health_info.label }}</b> 
+            {{ form.health_info(class="form-control") }}
+          </div>
+      </div>
+      <div class="mt-4">
+        {{ form.submit(class="btn btn-success w-100") }}
+      </div>
+  </form>
+  </div>
+
+<div class="line-with-text mt-5">
+   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+</div>
+<script src="{{ url_for('admin_bp.static', filename='js/streams.js') }}"></script>
+<script>
+  url = "{{ url_for('admin_bp.get_streams') }}";
+  getStreams(url)
+</script>
+{% endblock main_content %}
+

@@ -16,10 +16,10 @@
             <span>Add teacher</span>
          </div>
       </a>
-      <a href="">
+      <a href="{{ url_for('admin_bp.assign_teacher_roles') }}">
          <div class="d-flex link__width">
             <i class="material-icons">assignment_ind</i>
-            <span class="">Asign roles</span>
+            <span class="">Manage Teachers</span>
          </div>
       </a>
       <a href="{{ url_for('admin_bp.update_profile') }}">

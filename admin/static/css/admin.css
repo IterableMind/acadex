@@ -33,7 +33,6 @@
 }
 
 
-
 .side-nav > ul li {
   transition: background-color 0.4s ease, padding 0.4s ease, border-radius 0.4s ease, font-weight 0.4s ease;
 }
@@ -99,7 +98,9 @@
   align-items: center;
 }
 
-
+.custom-header-bg {
+  background-color: rgb(169 210 194);
+}
 
 /* Hide side nav on small screens */
 @media (max-width: 768px) {
@@ -111,7 +112,7 @@
 /* Horizontal navigation styling */
 .horizontal-nav {
   position: fixed;
-  top: 60px;
+  top: 75px;
   left: 170px; /* Width of side nav */
   right: 0;
   height: 50px; 
@@ -157,7 +158,7 @@
 
 /* Main content styling */
 .main-content {
-  margin-top: 110px; /* Height of header + horizontal nav */
+  margin-top: 125px; /* Height of header + horizontal nav */
   margin-left: 170px; /* Width of side nav */
   padding: 15px;
 }
@@ -251,6 +252,17 @@
   border-radius: 50%;
   background-color: #e0e0e0;
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.student-passport {
+  width: 150px;
+  height: 150px;
+  /* border-radius: 50%; */ 
+  background-size: cover;
+  margin-left: auto;
+  margin-right: auto;
   background-position: center;
   background-repeat: no-repeat;
 }

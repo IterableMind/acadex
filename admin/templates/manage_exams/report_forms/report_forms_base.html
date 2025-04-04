@@ -1,0 +1,355 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.add_new_exam') }}">
+        <div class="d-flex link__width sub--link--active">
+          <i class="fa fa-plus-circle"></i>
+          <span class="">Add new Exam</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.admin_marks_entry') }}">
+        <div class="d-flex link__width">
+          <i class="fa fa-circle"></i>
+          <span class="">Enter Marks</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.manage_exams') }}">
+        <div class="d-flex link__width">
+            <i class="fa fa-gear"></i>
+            <span>Manage Exams</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.generate_report_forms') }}" id="report-forms" class="x">
+        <div class="d-flex link__width sub--link--active">
+            <i class="fa fa-file"></i>
+            <span>Report Forms</span>
+        </div>
+      </a>
+    </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %}
+ <!-- Flashed Messages -->
+ {% with messages = get_flashed_messages(with_categories=True) %}
+ {% if messages %}
+   <div class="alert-container">
+     {% for category, message in messages %}
+       <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+         {{ message }}
+         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+       </div>
+     {% endfor %}
+   </div>
+  {% endif %}
+ {% endwith %}
+
+  <div class="container">
+    <div class="d-flex align-items-center mb-2 download-status d-none">
+      <strong class="text-warning">Generating report forms...</strong>
+      <div class="spinner-border ms-auto text-warning" role="status" aria-hidden="true"></div>
+    </div>
+    <div class="accordion accordion-flush" id="accordionFlushExample" class="shadow-sm">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="flush-headingOne">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+           <span>Report Forms Set-up</span>
+          </button>
+        </h2>
+        <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+          <div class="accordion-body"> 
+            <h5 class="text-center">Customize Report Forms</h5>
+            <div class="container mt-4">
+              <form  action="{{ url_for('admin_bp.process_report_forms') }}" method="post"
+                id="form-data">
+                <div class="row">
+                  <input type="text" id="download-input" class="d-none" name="download">
+                  <div class="col-lg-4 col-md-6 col-12 mb-3">
+                    <div class="floating-label-container">
+                      <span class="floating-label">Term Dates</span>
+                      <div>
+                        <label for="close-date" class="fw-bold">Closing Date:</label>
+                        <input type="date" id="close-date" class="input is-primary mb-2" 
+                          placeholder="Closing Date" name="closing-date" required>
+                        <label for="open-date" class="fw-bold">Opening Date:</label>
+                        <input type="date" id="open-date" class="input is-primary" placeholder="Opening Date" name="opening-date" required>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12 mb-3">
+                      <div class="floating-label-container">
+                          <span class="floating-label">Examination</span>
+                          <div>
+                            <div class="field"> 
+                              <div class="control has-icons-left">
+                                <div class="select">
+                                  <select name="exam" id="exam" required>
+                                    <option value="" selected disabled>Select Exam</option>
+                                    {% for exam in exams %}
+                                      {% if exam.status == 'closed' %}
+                                        <option value="{{ exam.name }}">{{ exam.name }}</option>
+                                      {% endif %}
+                                    {% endfor %}
+                                  </select>
+                                </div>
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-file"></i>  <!-- Font Awesome file icon -->
+                                </span>
+                              </div>
+                            </div>
+                            <div class="field">
+                              <label class="label">Rank Students?</label>
+                              <div class="control">
+                                  <label class="radio">
+                                    <input type="radio" name="rank" value="yes">
+                                      Yes
+                                  </label>
+                                  <label class="radio">
+                                    <input type="radio" name="rank" value="no" checked>
+                                      No
+                                  </label>
+                              </div>
+                          </div>                          
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12 mb-3">
+                    <div class="floating-label-container">
+                      <span class="floating-label">Grade and Stream</span>
+                      <div>
+                        <div class="field"> 
+                          <b>Select Grade</b>
+                          <div class="control has-icons-left">
+                            <div class="select">
+                              <select name="grade" id="grade" required>
+                                <option value="" selected disabled>Select Grade</option>
+                                <option value="Grade 1">Grade 1</option>
+                                <option value="Grade 2">Grade 2</option>
+                                <option value="Grade 3">Grade 3</option>
+                                <option value="Grade 4">Grade 4</option>
+                                <option value="Grade 5">Grade 5</option>
+                                <option value="Grade 6">Grade 6</option>
+                                <option value="Grade 7">Grade 7</option>
+                              </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                              <i class="fas fa-house"></i>  <!-- Font Awesome file icon -->
+                            </span>
+                          </div>
+                        </div>
+                        <div class="col-lg-6" style="display: none;" id="stream-fields">
+                          <b>Select Stream</b>   
+                          <div class="field"> 
+                            <div class="control has-icons-left">
+                              <div class="select">
+                                <select id="dynamicSelect" name="streams"></select>
+                              </div>
+                              <span class="icon is-small is-left">
+                                <i class="fas fa-house"></i>  <!-- Font Awesome file icon -->
+                              </span>
+                            </div>
+                          </div>
+                        </div>                           
+                      </div>
+                    </div>
+                  </div>                
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button class="btn btn-danger btn-sm mx-2 mb-2">
+                    <i class="fa fa-eye mx-2"></i>View Report Cards
+                  </button>
+                  <button class="btn btn-secondary btn-sm mx-2 mb-2" id="btn-download">
+                    <i class="fa fa-download"></i> Download Report Cards
+                  </button>
+                </div> 
+              </form>
+            </div>          
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container bg-light mt-1 pt-2 px-4">
+      {% if report_cards %}
+      <!-- <div class="d-flex justify-content-start">
+        <button class="btn btn-secondary btn-sm mx-2 mb-2" id="btn-download">
+          <i class="fa fa-download"></i> Download Report Cards
+        </button>
+      </div>  -->
+        {% for report in report_cards %}
+          <div class="border bg-white p-3 mb-3 shadow-sm" 
+            style="max-width: 860px; margin-left: auto; margin-right: auto;"> 
+            <div class="container">
+              <h4 class="text-center fw-bold">BUSHRA ACADEMY</h4>
+              <h5 class="text-center fw-bold">LEARNER'S ASSESSMENT REPORT</h5>
+              <h5 class="text-center">Exam: {{target_exam.name }} Term: {{ target_exam.term }} 
+                ({{ target_exam.year}})</h5>
+              <hr>
+              <div class="d-flex">
+                <h6><strong>Student Name:</strong> {{ report.student.fullname.upper() }}</h6>
+                <h6 class="mx-3 fw-bold">{{ report.student.grade }}</h6>
+                {% if report.student.stream %}
+                <h6 class="mx-3">{{ report.student.stream }}</h6>
+                {% endif %}
+                {% if is_rank_enabled %}
+                 <div class="d-flex mx-5">
+                  <div class="border mb-1 px-2">
+                    <h6>Position: <span class="fw-bold">{{ loop.index }}</span>
+                       Out of <span class="fw-bold">{{ loop.length }}</span></h6>
+                   </div>
+                 </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="table-reponsive">
+              <table class="table small table-bordered border">
+                <thead>
+                  <tr>
+                    <th class="text-center">LEARNING AREA</th>
+                    <th class="text-center">ASSESSMENT</th>
+                    <th class="text-center">SCORE</th>
+                    <th class="text-center">PERFORMANCE LEVEL</th>
+                    <th class="text-center">GRADE</th>
+                    <th class="text-center">REMARKS</th> 
+                    <th class="text-center">INITIALS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for subject, details in report.marks.items() %}
+                    <tr>
+                      <td>{{ subject }}</td>
+                      <td class="text-center">100</td>
+                      <td class="text-center">
+                        {{ details.score if details.score is not none else "N/A" }}
+                      </td>
+                      <!-- <td class="text-center"></td> -->
+                      {% if details.score >= 76 %}
+                        <td class="text-center">4</td>
+                      {% elif details.score >= 60 %}
+                        <td class="text-center">3</td>
+                      {% elif details.score >= 40 %}
+                        <td class="text-center">2</td>
+                      {% else %}
+                        <td class="text-center">1</td>
+                      {% endif %}
+                      {% if details.score >= 76 %}
+                        <td class="text-center">EE</td>
+                      {% elif details.score >= 60 %}
+                        <td class="text-center">ME</td>
+                      {% elif details.score >= 40 %}
+                        <td class="text-center">AE</td>
+                      {% else %}
+                        <td class="text-center">BE</td>
+                      {% endif %}
+                      <td class="text-center">{{ details.grade }}</td> 
+                      <td>{{ details.teacher }}</td>
+                    </tr>
+                  {% endfor %} 
+                  <!-- <tr class="fw-bold">
+                    <td>Total</td>
+                    <td class="text-center">
+                      {% if tot_subs %}
+                        {{ tot_subs * 100}}
+                      {% else %}
+                        N/A
+                      {% endif %}
+                    </td>
+                    <td>{{ report.total }}</td>
+                  </tr> -->
+                </tbody>
+              </table>
+            </div>
+            <table class="table small table-bordered">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>EXCEED EXPECTATION</th>
+                  <th>MEET EXPECTATION</th>
+                  <th>APPROACH EXPECTATION</th>
+                  <th>BELOW EXPECTATION</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td  class="fw-bold">GRADING</td>
+                  <td>4 = 76-100</td>
+                  <td>3 = 60-75</td>
+                  <td>2 = 40-59</td>
+                  <td>1 = 0-39</td>
+                </tr>
+                <tr>
+                  <td  class="fw-bold">PERFORMANCE LEVEL</td>
+                  <td>EE</td>
+                  <td>ME</td>
+                  <td>AE</td>
+                  <td>BE</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="row">
+              <div class="col-5">
+                <h6 class="text-center">Headteacher</h6>
+                <div class="floating-label-container">
+                  <span class="floating-label">Signature, Stamp and comment</span>
+                  <div>
+                                            
+                  </div>
+                </div>
+              </div>
+              <div class="col-5">
+                <h6>Classteacher</h6>
+                <div class="floating-label-container">
+                  <span class="floating-label">Comment</span>
+                  <div>
+                      
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2 d-flex justify-content-between border-bottom pb-2 px-3">
+                <h6>Closing Date: <span class="text-muted">{{ dates['closing_date'] }}</span></h6>
+                <h6 class="mx-">Opening Date: <span class="text-muted">{{ dates['opening_date'] }}</span> </h6>
+              </div>
+            </div>
+
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <style>
+    .floating-label-container {
+        position: relative;
+        padding: 20px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        transition: all 0.3s ease-in-out;
+        min-height: 80px;
+    }
+
+    .floating-label {
+        position: absolute;
+        top: -12px; /* Adjust position to be on top of the border */
+        left: 15px; /* Adjust left spacing */
+        background: white; /* Matches background */
+        padding: 0 5px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #777;
+    }
+</style>
+<script src="{{ url_for('admin_bp.static', filename='js/streams.js') }}"></script>
+<script>
+  url = "{{ url_for('admin_bp.get_streams') }}";
+  getStreams(url)
+  document.getElementById('btn-download').addEventListener('click', () =>{
+    document.getElementById('download-input').value='download';
+  });
+  var form = document.getElementById('form-data')
+  form.addEventListener('submit', () => {
+    // event.preventDefault()
+    if (event.submitter.id == 'btn-download') {
+      document.querySelector('.download-status').classList.remove('d-none');
+    }
+  })
+</script>
+{% endblock main_content %}
