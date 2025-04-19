@@ -43,11 +43,11 @@
    </div>
   {% endif %}
  {% endwith %}
-<div class="container mt-3">
+<div class="container mt-2">
     <div class="border-0 p-2 bg-white p-3"> 
         <div class="d-flex align-items-center bg-white p-2">
           <hr class="flex-grow-1">
-          <h5 class="mx-3 fw-light">
+          <h5 class="mx-1 fw-bold">
             New Exam Set-up
           </h5>
           <hr class="flex-grow-1">
@@ -69,7 +69,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="year" class="form-label fw-bold">Year</label>
-                        {{ form.year(class="form-control", type="number", placeholder="2025", min="2000", max="2100", required=True) }}
+                        {{ form.year(class="form-control", type="number", min="2000", max="2100", required=True) }}
                         <div class="invalid-feedback">Enter a valid year.</div>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
     </div>
 </div>
 <div class="line-with-text mt-4">
-  <small class="text-mut fw-bold">Acadex &copy;2024 Developed by Oyaro Jared</small>
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
 </div>
 <script>
     // Bootstrap Form Validation

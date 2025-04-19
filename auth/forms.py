@@ -7,8 +7,7 @@ class LoginForm(FlaskForm):
     email = StringField(
         'User Email',
         validators=[
-            DataRequired(message='You must provide a valid email to login!'),
-            Email(message='Please enter a valid email.'),
+            DataRequired(message='You must provide a valid email to login!'), 
             Length(max=50)
         ]
     )

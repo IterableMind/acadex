@@ -1,6 +1,6 @@
 {% extends "manage_teachers/layout.html" %}
 
-{% block horizontal_nav %} 
+{% block horizontal_nav %}
 <div class="container d-flex links align-items-center">
     <a href="{{ url_for('admin_bp.student_dash') }}">
         <div class="d-flex link__width sub--link--active">
@@ -14,7 +14,7 @@
             <span>Add student</span>
         </div>
     </a>
-</div> 
+</div>
 {% endblock horizontal_nav %}
 
 {% block main_content %}
@@ -23,32 +23,45 @@
 
 <div class="container mt-4">
     {% if student_info %}
-    <div class="card shadow-lg p-4">
+    <div class="card shadow-sm p-4">
         <div class="row">
             <!-- Student Photo -->
-            <div class="col-md-4 text-center">
-                <img src="{{ student_info.photo or url_for('static', filename='images/default_student.png') }}" 
-                     class="rounded img-fluid" 
-                     alt="Student Photo" 
-                     style="max-width: 200px; height: auto;">
+            <div class="col-md-4 text-center border p-2">
+                <h4 class="has-text-danger fw-bold pb-2">{{ student_info.fullname }}</h4> 
+                {% if student_info.photo %}
+                    <label for="passportInput">
+                        <div class="border p-2 st-passport" style="max-width: 200px; height: auto; margin-left: auto; margin-right: auto;">
+                            <div class="profile-xlg" style="background-image:url('{{ url_for('static', filename='images/profile-pictures/{0}'.format(student_info.photo)) }}')">
+                            </div>
+                        </div>
+                    </label>
+                {% else %}
+                    <label for="passportInput">
+                        <div class="border p-2 st-passport" style="max-width: 200px; height: auto; margin-left: auto; margin-right: auto;">
+                            <img src="{{ url_for('static', filename='images/profile-pictures/default.jpg') }}" class="rounded img-fluid" alt="Student Photo" style="max-width: 160px; height: auto;">  
+                        </div>
+                    </label>
+                {% endif %}
+                <h6>Click on the pic to update </h6>
+                <form method="POST" action="{{ url_for('admin_bp.update_student_passport') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="adm_no" value="{{ student_info.adm_no }}">
+                    <input type="file" id="passportInput" name="passport" accept="image/*" style="display: none;" onchange="this.form.submit()">
+                </form>
             </div>
-
             <!-- Student Details -->
             <div class="col-md-8 table-responsive">
-                <h3 class="text-primary fw-bold">{{ student_info.fullname }}</h3>
-                <table class="table table-striped">
+                <h5 class="has-text-danger text-center fw-bold">
+                    <i class="bi bi-info-circle"></i> Student's Biodata
+                </h5>
+                <table class="table table-striped table-bordered">
                     <tbody>
                         <tr>
                             <th>Admission No:</th>
                             <td>{{ student_info.adm_no }}</td>
                         </tr>
                         <tr>
-                            <th>Grade & Stream:</th>
+                            <th>Grade/Form & (Stream):</th>
                             <td>{{ student_info.grade }} {% if student_info.stream %} - {{ student_info.stream }} {% endif %}</td>
-                        </tr>
-                        <tr>
-                            <th>Date of Birth:</th>
-                            <td>{{ student_info.dob }}</td>
                         </tr>
                         <tr>
                             <th>Gender:</th>
@@ -56,15 +69,15 @@
                         </tr>
                         <tr>
                             <th>Parent/Guardian:</th>
-                            <td>{{ student_info.parent_name }} ({{ student_info.relationship }})</td>
+                            <td>{{ student_info.parent_name }}</td>
                         </tr>
                         <tr>
                             <th>Contact:</th>
                             <td>{{ student_info.contact_phone }} {% if student_info.email %} | {{ student_info.email }} {% endif %}</td>
                         </tr>
                         <tr>
-                            <th>Previous School:</th>
-                            <td>{{ student_info.previous_school or "N/A" }}</td>
+                            <th>Branch:</th>
+                            <td>{{ student_info.branch.name }}</td>
                         </tr>
                         <tr>
                             <th>Health Info:</th>
@@ -72,16 +85,17 @@
                         </tr>
                     </tbody>
                 </table>
-                
                 <!-- Action Buttons -->
                 <div class="mt-3">
-                    <a href="" class="btn btn-warning btn-sm">
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editStudentModal">
                         <i class="material-icons">edit</i> Edit
-                    </a>
-                    <a href="" class="btn btn-danger btn-sm"
-                       onclick="return confirm('Are you sure you want to delete this student?');">
+                    </button>
+                    <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this student?');">
                         <i class="material-icons small">delete</i> Delete
                     </a>
+                    <button class="btn btn-small btn-primary">
+                        <i class="bi bi-chat"></i> Send sms
+                    </button>
                 </div>
             </div>
         </div>
@@ -90,5 +104,99 @@
         <div class="alert alert-warning text-center">No student data available.</div>
     {% endif %}
 </div>
+
+ <!-- Edit Student Modal -->
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true" style="border-radius: 0% !important;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <form method="POST" action="{{ url_for('admin_bp.update_student_biodata') }}">
+          <div class="modal-header bg-warning text-white pt-2 pb-2 px-4">
+            <h5 class="modal-title fw-bold" id="editStudentModalLabel">
+                <i class="bi bi-pencil"></i> Edit Student Information
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+  
+          <div class="modal-body px-5">
+            <input type="hidden" name="adm_no" value="{{ student_info.adm_no }}">
+  
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="fullname" class="form-label fw-bold">Full Name</label>
+                <input type="text" name="fullname" class="form-control" value="{{ student_info.fullname }}">
+              </div>
+  
+              <div class="col-md-6">
+                <label for="gender" class="form-label fw-bold">Gender</label>
+                <select name="gender" class="form-select">
+                  <option value="Male" {% if student_info.gender == 'Male' %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if student_info.gender == 'Female' %}selected{% endif %}>Female</option>
+                </select>
+              </div>
+  
+              <div class="col-md-6">
+                <label for="grade" class="form-label fw-bold">Grade/Form</label>
+                {% if grades %}
+                    <select class="form-select" name="grade" required>
+                        <option value="" disabled {% if not student_info.grade %}selected{% endif %}>Select Grade/Form</option>
+                        {% for grade in grades %}
+                            <option value="{{ grade.grade_name }}"
+                                {% if grade.grade_name == student_info.grade %}selected{% endif %}>
+                                {{ grade.grade_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+              </div>
+  
+              <div class="col-md-6">
+                <label for="stream" class="form-label fw-bold">Stream</label>
+                <input type="text" name="stream" class="form-control" value="{{ student_info.stream }}">
+              </div>
+  
+              <div class="col-md-6">
+                <label for="parent_name" class="form-label fw-bold">Parent/Guardian</label>
+                <input type="text" name="parent_name" class="form-control" value="{{ student_info.parent_name }}">
+              </div>
+  
+              <div class="col-md-6">
+                <label for="contact_phone" class="form-label fw-bold">Phone</label>
+                <input type="text" name="contact_phone" class="form-control" value="{{ student_info.contact_phone }}">
+              </div>
+  
+              <div class="col-md-6">
+                <label for="branch" class="form-label fw-bold">Branch</label>
+                {% if branches %}
+                    <select class="form-select" name="branch" required>
+                        <option value="" disabled {% if not student_info.branch %}selected{% endif %}>Select Branch</option>
+                        {% for branch in branches %}
+                            <option value="{{ branch.name }}"
+                                {% if branch == student_info.branch %}selected{% endif %}>
+                                {{ branch.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+              </div>
+  
+              <div class="col-md-6">
+                <label for="health_info" class="form-label fw-bold">Health Info</label>
+                <textarea name="health_info" class="form-control" rows="2">{{ student_info.health_info }}</textarea>
+              </div>
+            </div>
+          </div>
+  
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-send"></i> Save Changes
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-arrow-clockwise"></i> Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>  
 
 {% endblock main_content %}

@@ -7,7 +7,7 @@ from .models import db, SchoolInfo, Teacher, User, Grade
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
- 
+
 
 def create_app():
   "Create app and register blueprints"
@@ -60,8 +60,9 @@ def create_app():
   # Create all database tables if they do not already exist
   with app.app_context():
     db.create_all()
-    # Add grades to the database
-    grades = [Grade(grade_name=f'Grade {i}') for i in range(1, 10)]
+    # Add grades to the database: Grade 1–9 and Form 1–4
+    grades = [Grade(grade_name=f'Grade {i}') for i in range(1, 10)] + \
+             [Grade(grade_name=f'Form {i}') for i in range(2, 5)]
     try:
       db.session.add_all(grades)
       db.session.commit()

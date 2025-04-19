@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from flask_login import UserMixin
+from sqlalchemy import Text
 
 db = SQLAlchemy()
 
@@ -28,16 +29,21 @@ class Teacher(db.Model):
     tsc_no = db.Column(db.String(20), unique=True, nullable=True)  
     id_no = db.Column(db.String(20), unique=True, nullable=False)
     phone_no = db.Column(db.String(15), unique=True, nullable=False)
+    
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=True)
+    branch = db.relationship('SchoolBranch', backref='teachers')
+    
     email = db.Column(db.String(100), unique=True, nullable=True)   
     gender = db.Column(db.Enum('male', 'female', name='gender_enum'), nullable=False)
     role = db.Column(db.String(20), default='teacher')
     passport_filename = db.Column(db.String(255), nullable=True)
+    salary = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
 
     def __repr__(self):
         return f"<Teacher {self.teacher_name} - ID: {self.id}>"
-    
+
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -86,19 +92,15 @@ class Student(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)   
     fullname = db.Column(db.String(50), nullable=False)   
-    grade = db.Column(db.String(10), nullable=False)  
-    dob = db.Column(db.Date, nullable=False)   
+    grade = db.Column(db.String(10), nullable=False)    
     photo = db.Column(db.String(255), nullable=True)   
-    adm_no = db.Column(db.String(20), unique=True, nullable=False)  
-    adm_date = db.Column(db.Date, nullable=False)   
+    adm_no = db.Column(db.String(20), unique=True, nullable=False)      
     gender = db.Column(db.String(10), nullable=False)  
     stream = db.Column(db.String(50), nullable=True)   
-    previous_school = db.Column(db.String(100), nullable=True)   
-    parent_name = db.Column(db.String(50), nullable=False)   
-    relationship = db.Column(db.String(30), nullable=False)   
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=True)
+    branch = db.relationship('SchoolBranch', backref='students')   
+    parent_name = db.Column(db.String(50), nullable=False)     
     contact_phone = db.Column(db.String(15), nullable=False)   
-    id_no = db.Column(db.Integer, nullable=False)   
-    email = db.Column(db.String(120), nullable=True)  
     health_info = db.Column(db.Text, nullable=True)  
 
     def __repr__(self):
@@ -106,8 +108,11 @@ class Student(db.Model):
     
 
 class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True)   
-    subject = db.Column(db.String(100), nullable=False)  
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(100), nullable=False)
+    short_form = db.Column(db.String(20), nullable=False)
+    # The nullable attribute to be changed to False.
+    grades = db.Column(db.PickleType, nullable=True)  # You can also use JSON or ARRAY if using PostgreSQL
 
 
 class Roles(db.Model):
@@ -177,3 +182,15 @@ class ExamMarks(db.Model):
 
     def __repr__(self):
         return f"<Marks: {self.marks} for {self.student.fullname} in {self.subject.subject} ({self.exam.name})>"
+
+
+class SchoolBranch(db.Model):
+    __tablename__ = 'school_branch'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)   
+    branch_manager = db.Column(db.String(50), nullable=False)
+    branch_head = db.Column(db.String(50), nullable=False)
+    branch_level = db.Column(db.String(30), nullable=False)
+
+    def __repr__(self):
+        return f"<SchoolBranch {self.name} - ID: {self.id}>"

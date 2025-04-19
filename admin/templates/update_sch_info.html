@@ -15,12 +15,6 @@
           <span>Manage Sch Info</span>
         </div>
       </a>
-      <a href="{{ url_for('admin_bp.view_teachers') }}">
-        <div class="d-flex link__width">
-          <i class="material-icons">analytics</i>
-          <span class="">Manage Teachers</span>
-        </div>
-      </a>
       <a href="{{ url_for('admin_bp.school_setup') }}">
         <div class="d-flex link__width">
           <i class="material-icons">settings</i>
@@ -30,10 +24,9 @@
   </div> 
 {% endblock horizontal_nav %}
 
-
 <!-- Main content area -->
 {% block main_content %}
-  <div class="bg-white p-4 border rounded shadow-sm mt-4 info-form">
+  <div class="bg-white p-4 rounded shadow-sm mt-2 info-form">
     <!-- Flashed Messages -->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
@@ -49,10 +42,14 @@
     {% endwith %}
     <form action="{{ url_for('admin_bp.update_sch_info') }}" method="post" novalidate>
       <div class="form">
-        {{ form.hidden_tag() }}
-        <h5 class="text-center pb-2 fw-light has-text-primary" id="update-title"> 
-          Update School Information
-        </h5>
+        {{ form.hidden_tag() }} 
+        <div class="d-flex align-items-center bg-white p-2">
+            <hr class="flex-grow-1">
+            <h5 class="mx-1 fw-bold has-text-primary"> 
+               [ Update School Information ]
+            </h5>
+            <hr class="flex-grow-1">
+        </div>
         <div class="row mt-4">
           <div class="col-sm-6">
             <div class="field">
@@ -149,8 +146,8 @@
       </div>
     </form>
   </div> 
-  <div class="line-with-text mt-5">
-    <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+  <div class="line-with-text mt-4">
+    <small class="text-muted">Bushra &copy;2025 Developed by Oyaro Jared</small>
   </div>
 {% endblock main_content %}
 

@@ -34,28 +34,41 @@
 <!-- Main content area -->
 {% block main_content %}
  <div class="container-fluid">
-   <div class="accordion-item bg-white p-2 shadow-sm">
-      <h2 class="accordion-header" id="flush-headingThree">
-        <button class="accordion-button collapsed" 
-        type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
-          <h6 class="fw-light p-1">Display Options</h6>
-          <i class="bi bi-chevron-down mx-2"></i>
-        </button>
-      </h2>
-      <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
-        <div class="accordion-body bg-white p-2">
-            <a href="{{ url_for('admin_bp.view_teachers') }}" style="text-decoration: none;">
-               <button class="btn btn-danger btn-sm">
-                  <i class="fa fa-print"></i> Print View
-               </button>
-            </a>
-            <a href="{{ url_for('admin_bp.teachers_classic_view') }}" class="mx-2">
-               <button class="btn btn-secondary btn-sm">
-                  <i class="fa fa-eye" aria-hidden="true"></i> Detailed View
-               </button>
-            </a>
-        </div>
-      </div>
+   <div class="accordion-item bg-white p-3 shadow-sm mt-1">
+        <form action="{{ url_for('admin_bp.teachers_classic_view') }}" method="post">
+            <div>
+                <b>Select Branch to view Teachers</b>
+                <select name="branch" id="branch-select" class="form-select mt-2">
+                    <option value="all">All</option>
+                    {% if branches %}
+                        {% for branch in branches %}
+                            <option value="{{ branch.name }}">{{ branch.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            <h2 class="accordion-header" id="flush-headingThree">
+                <button class="accordion-button collapsed" 
+                type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                <h6 class="fw-light p-1 mt-2">Display Options</h6>
+                <i class="bi bi-chevron-down mx-2"></i>
+                </button>
+            </h2>
+            <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body bg-white p-2 pb-2">
+                    <a href="{{ url_for('admin_bp.view_teachers') }}" style="text-decoration: none;">
+                    <button type="button" class="btn btn-danger btn-sm">
+                        <i class="fa fa-print"></i> Print View
+                    </button>
+                    </a>
+                    <!-- <a href="" class="mx-2"> -->
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        <i class="fa fa-eye" aria-hidden="true"></i> Detailed View
+                    </button>
+                    <!-- </a> -->
+                </div>
+            </div>
+        </form>
     </div>
  </div>
 <div class="w-100 shadow-sm p-3 bg-white mt-3">
@@ -74,27 +87,39 @@
          </button>
       </div>
       <table class="table table-sm table table-bordered table-hover">
-         <caption style="caption-side: top;">
+        <caption id="table-caption" style="caption-side: top;">
             <small>Total Number of Teachers {{ teachers | length() }} </small>
-         </caption>
+         </caption>          
+         <!-- <h5 class="text-center m-2 fw-bold has-text-primary" id="branch-teachers">
+            Showing All Teachers Info <i class="bi bi-info-circle"></i>
+         </h5> -->
+         <div class="line-with-text mt-1">
+            <h5 class="text-center fw-bold has-text-primary " id="branch-teachers">
+                Showing All Teachers Info <i class="bi bi-info-circle"></i>
+             </h5>
+        </div>
          <thead>
             <tr>
-               <th style="width: 7px">S/N</th>
-               <th style="width: 90px">Teacher Name</th> 
-               <th style="width: 60px">Phone</th>
-               <th style="width: 100px">Email</th>
-               <th style="width: 100px">TSC No</th>
+               <th style="width: 1%;">#</th>
+               <th>Teacher Name</th> 
+               <th>Phone</th>
+               <th>ID No</th>
+               <th>Branch</th>
+               <th>TSC No</th>
+               <th>Gross Salary</th>
             </tr>
          </thead>
          <tbody>
             {% for teacher in teachers %}
-               <tr>
-                  <td style="width: 7px;">{{ loop.index }}</td>
-                  <td style="width: 90px">{{ teacher.teacher_name }}</td> 
-                  <td style="width: 60px">{{ teacher.phone_no }}</td>
-                  <td style="width: 100px">{{ teacher.email | default('--', True) }}</td>
-                  <td style="width: 100px">{{ teacher.tsc_no | default('--', True) }}</td>
-               </tr>
+                <tr data-branch="{{ teacher.branch.name }}">
+                <td>{{ loop.index }}</td>
+                <td>{{ teacher.teacher_name }}</td> 
+                <td>{{ teacher.phone_no }}</td>
+                <td>{{ teacher.id_no }}</td>
+                <td>{{ teacher.branch.name | default('--', True) }}</td>
+                <td>{{ teacher.tsc_no | default('--', True) }}</td>
+                <td>Ksh. {{ "{:,}".format(teacher.salary) }}</td>
+                </tr>
             {% endfor %}
          </tbody>
       </table>
@@ -103,6 +128,49 @@
 </div>
 <!-- Footer -->
 <div class="line-with-text mt-4">
-   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
 </div>
+<script>
+    const branchSelect = document.getElementById('branch-select'); 
+    const tableHeader = document.getElementById('branch-teachers');
+  
+    branchSelect.addEventListener('change', function() {
+      const selectedBranch = this.value;
+      
+      // Get all rows in the table body
+      const rows = document.querySelectorAll('table tbody tr');
+      let filteredCount = 0; // counter for visible rows
+      
+      if (selectedBranch === "all") {
+        tableHeader.textContent = "Showing all teachers info."
+      }
+
+      // Loop through rows and filter
+      rows.forEach(row => {
+        // Get branch from row's data attribute
+        const rowBranch = row.getAttribute('data-branch') || '';
+        
+        // If "all" is selected or row's branch matches, show row; otherwise hide row.
+        if (selectedBranch === "all" || rowBranch === selectedBranch) {  
+          row.style.display = "";
+          filteredCount++;  // increment counter
+          // Update the first cell with the new row number (assumes the number is in the first <td>)
+          const firstCell = row.querySelector('td:first-child');
+          if (firstCell) {
+            firstCell.textContent = filteredCount;
+          }
+        } else {
+            tableHeader.textContent = selectedBranch + ' Teachers Info'
+          row.style.display = "none";
+        }
+      });
+      
+      // Update the caption text with the filtered count.
+      const caption = document.getElementById('table-caption');
+      if (caption) {
+        // You can wrap the count in <small> if you prefer to keep the same style.
+        caption.innerHTML = '<small>Total Number of Teachers ' + filteredCount + '</small>';
+      }
+    });
+  </script>  
 {% endblock main_content %}

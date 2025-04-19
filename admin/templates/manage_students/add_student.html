@@ -20,7 +20,6 @@
 
 <!-- Main content area -->
 {% block main_content %}
-
   <!-- Flashed Messages -->
   {% with messages = get_flashed_messages(with_categories=True) %}
    {% if messages %}
@@ -36,11 +35,12 @@
   {% endwith %}
 
   <div class="container bg-white px-5 pt-3 pb-3 shadow-sm">
-    <div class="container rounded custom-header-bg">
-      <h5 class="text-center text-white p-1">
-        <i class="fa fa-plus" aria-hidden="true"></i>
-        Add new student
-      </h5>
+    <div class="d-flex align-items-center bg-white p-2">
+        <hr class="flex-grow-1">
+        <h5 class="mx-1 fw-bold has-text-primary">
+           [ Add New Student ]
+        </h5>
+        <hr class="flex-grow-1">
     </div>
     <h6 class="fw-light">[Personal Information]</h6>
     <form method="POST" enctype="multipart/form-data" novalidate>
@@ -56,21 +56,13 @@
             {% endfor %}
           </div>
           <div class="col-lg-6">
-            <b>{{ form.gender.label }}<span class="text-danger"> *</span></b> 
-            {{ form.gender(class="form-select") }}
-          </div> 
-          <div class="col-lg-6">
-            <b>{{ form.dob.label }}<span class="text-danger"> *</span></b>  
-            {{ form.dob(id="dob", class="input is-primary" + 
-            (' is-danger' if form.dob.errors else '')) }}
-            {% for error in form.dob.errors %}
+            <b>{{ form.gender.label }}<span class="text-danger"> *</span></b>  
+            {{ form.gender(id="gender", class="input is-primary" + 
+            (' is-danger' if form.gender.errors else '')) }}
+            {% for error in form.gender.errors %}
               <small class="text-danger">{{ error }}</small>
             {% endfor %}
           </div> 
-          <div class="col-lg-6">
-            <b>{{ form.photo.label }}</b>
-            {{ form.photo(class="form-control") }}
-          </div>
           <div class="col-lg-6">
             <b>{{ form.adm_no.label }}<span class="text-danger"> *</span></b>  
             {{ form.adm_no(id="adm_no", class="input is-primary" + 
@@ -80,13 +72,13 @@
             {% endfor %}
           </div> 
           <div class="col-lg-6">
-            <b>{{ form.adm_date.label }}<span class="text-danger"> *</span></b>  
-            {{ form.adm_date(id="adm_date", class="input is-primary" + 
-              (' is-danger' if form.adm_date.errors else '')) }}
-              {% for error in form.adm_date.errors %}
-                <small class="text-danger">{{ error }}</small>
-              {% endfor %}
+            <b>{{ form.photo.label }}</b>
+            {{ form.photo(class="form-control") }}
+          </div>
+          <div class="col-lg-6">
+           <!-- info here -->
           </div> 
+          <div class="col-lg-6"></div> 
           <div class="col-lg-6">
             <b>{{ form.grade.label }}<span class="text-danger"> *</span></b>  
             {{ form.grade(id="grade", class="input is-primary" + 
@@ -100,10 +92,13 @@
             <select id="dynamicSelect" class="form-select" name="streams"></select>
           </div> 
           <div class="col-lg-6">
-            <b>{{ form.previous_school.label }}</b>
-            {{ form.previous_school(class="input is-primary") }}
+            <b>{{ form.branch.label }}<span class="text-danger"> *</span></b>  
+            {{ form.branch(id="branch", class="input is-primary" + 
+              (' is-danger' if form.branch.errors else '')) }}
+              {% for error in form.branch.errors %}
+                <small class="text-danger">{{ error }}</small>
+              {% endfor %}
           </div>
-
           <hr style="color: white">
           <h6 class="fw-light">[Parent Information]</h6> 
           <div class="col-lg-6">
@@ -115,37 +110,13 @@
             {% endfor %}
           </div>
           <div class="col-lg-6">
-            <b>{{ form.relationship.label }}<span class="text-danger"> *</span></b> 
-            {{ form.relationship(id="relationship", class="input is-primary" + 
-            (' is-danger' if form.relationship.errors else '')) }}
-            {% for error in form.relationship.errors %}
-              <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-          </div> 
-          <div class="col-lg-6">
             <b>{{ form.contact_phone.label }}<span class="text-danger"> *</span></b>  
             {{ form.contact_phone(id="contact_phone", class="input is-primary" + 
             (' is-danger' if form.contact_phone.errors else '')) }}
             {% for error in form.contact_phone.errors %}
               <small class="text-danger">{{ error }}</small>
             {% endfor %}
-          </div>
-          <div class="col-lg-6">
-            <b>{{ form.id_no.label }}</b>
-            {{ form.id_no(id="id_no", class="input is-primary" + 
-            (' is-danger' if form.id_no.errors else '')) }}
-            {% for error in form.id_no.errors %}
-              <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-          </div>
-          <div class="col-lg-6">
-            <b>{{ form.email.label }}</b>
-            {{ form.email(id="email", class="input is-primary" + 
-            (' is-danger' if form.email.errors else '')) }}
-            {% for error in form.email.errors %}
-              <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-          </div>
+          </div> 
           <div class="col-lg-12">
             <b>{{ form.health_info.label }}</b> 
             {{ form.health_info(class="form-control") }}
@@ -158,7 +129,7 @@
   </div>
 
 <div class="line-with-text mt-5">
-   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+   <small class="text-muted">Bushra &copy;2025 Developed by Oyaro Jared</small>
 </div>
 <script src="{{ url_for('admin_bp.static', filename='js/streams.js') }}"></script>
 <script>

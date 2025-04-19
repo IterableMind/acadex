@@ -44,10 +44,11 @@
       <span class="nav-label">Grades</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
+  <li class="{{ b_active }}">
+    <a href="{{ url_for('admin_bp.manage_branch') }}" 
+      class="text-white text-decoration-none">
       <i class="material-icons">diversity_1</i>
-      <span class="nav-label">Staff</span>
+      <span class="nav-label">Branches</span>
     </a>
   </li>
   <li class="{{ ex_active }}">

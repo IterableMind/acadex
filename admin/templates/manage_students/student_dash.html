@@ -32,12 +32,12 @@
     <div class="chart-container mt-3 w-75" style="height: 150px;">
       <canvas id="studentChart"></canvas>
     </div>
-
+    <!-- rgb(212 212 212) !important -->
     <div class="row mt-4">
       {% if student_info %}
         {% for grade, data in student_info.items() %}
           <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm {% if grade in ['Form 2', 'Form 4', 'Form 3', 'Grade 7', 'Grade 8', 'Grade 9'] %}bg-sch-sec{% else %}bg-sch-primary{% endif %}">
               <div class="card-body text-center">
                 <h5 class="card-title fw-bold">{{ grade }}</h5>
                 <p class="card-text">
@@ -85,7 +85,7 @@
 </div>
 
 <div class="line-with-text mt-5">
-   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
 </div>
 
 <!-- Include Chart.js -->

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
-from ..models import Teacher
+from ..models import Teacher, Student
 from wtforms import (
     StringField, 
     TextAreaField, 
@@ -12,7 +12,9 @@ from wtforms import (
     PasswordField,
     EmailField,
     FileField,
-    DateField
+    DateField,
+    BooleanField
+
 )
 from wtforms.validators import (
     DataRequired, 
@@ -151,7 +153,24 @@ class TeacherForm(FlaskForm):
         ], 
         default=''
     )
-    submit = SubmitField('Add')
+    branch = SelectField(
+        'Branch',
+        validators=[
+            DataRequired(
+                message="You must select the teacher's branch."
+            )
+        ],
+        choices=[]
+    )
+    salary = IntegerField(
+        'Gross Salary',
+        validators=[
+            DataRequired(
+                message="Enter Gross Salary of the teacher."
+            )
+        ]
+    )
+    submit = SubmitField('Add Teacher')
 
     # Custom validators
     def validate_tsc_no(self, field):
@@ -233,7 +252,8 @@ class StreamForm(FlaskForm):
 class GradeForm(FlaskForm):
     grade_name = SelectField(
         'Grade',
-        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)],
+        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)] +
+        [(f'Form {i}', f'Form {i}') for i in range(2, 5)],
         validators=[DataRequired(message='Please select a grade.')]
     )
     stream1 = StringField(
@@ -272,18 +292,9 @@ class StudentRegistrationForm(FlaskForm):
 
     grade = SelectField(
         'Grade',
-        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 8)],
+        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)] +
+        [(f'Form {i}', f'Form {i}') for i in range(2, 5)],
         validators=[InputRequired(message='Please select a grade.')]
-    )
-
-    dob = DateField(
-        "Date of Birth", 
-        format="%Y-%m-%d", 
-        validators=[
-            DataRequired(
-                message='Please Select DOB to continue.'
-            )
-        ]
     )
 
     photo = FileField(
@@ -301,22 +312,12 @@ class StudentRegistrationForm(FlaskForm):
         render_kw={"placeholder": "Enter Adm no"}
     )
 
-    adm_date = DateField(
-        "Admission Date", 
-        format="%Y-%m-%d", 
-        validators=[
-            DataRequired(
-                message='Please enter the date the student was admitted.'
-            )
-        ]
-    )
-
     gender = SelectField(
         "Gender", choices=[
-            ("Male", "Male"), ("Female", "Female")
+         ("", "Select Gender"),   ("Male", "Male"), ("Female", "Female")
         ], 
         validators=[
-            DataRequired(message='You must select student\s gender')
+            DataRequired(message='You must select student\'s gender')
         ]
     )
 
@@ -325,10 +326,10 @@ class StudentRegistrationForm(FlaskForm):
         validators=[Optional()]
     )
 
-    previous_school = StringField(
-        "Previous School", 
-        validators=[Optional()],
-        render_kw={"placeholder": "Enter previous school"}
+    branch = SelectField(
+        "Select Branch", 
+        validators=[DataRequired(message="You must select a branch!")],
+        choices=[]
     )
 
     parent_name = StringField(
@@ -341,16 +342,6 @@ class StudentRegistrationForm(FlaskForm):
         render_kw={"placeholder": "Parent/Guardian's name"}
     )
 
-    relationship = StringField(
-        "Relationship with Student", 
-        validators=[
-            DataRequired(
-                message='You must indicate the relationship with the student.'
-            )
-        ],
-        render_kw={"placeholder": "Relationship with student"}
-    )
-
     contact_phone = StringField(
         "Contact Information", 
         validators=[
@@ -360,35 +351,66 @@ class StudentRegistrationForm(FlaskForm):
         ],
         render_kw={"placeholder": "07********"}
     )
-    
-    id_no = IntegerField("ID Number", 
-        validators=[DataRequired(
-            message='Please provide Id no of the parent/guardian.'
-        )],
-        render_kw={"placeholder": "Enter ID no"}
-                    )
-    email = EmailField(
-        "Email", 
-        validators=[Optional(), Email()],
-        render_kw={"placeholder": "Enter Email"}
-    )
+
     health_info = TextAreaField(
         "Health Information", 
         validators=[Optional()],
         render_kw={"placeholder": "Information about any chronical illiness"}
     )
-    submit = SubmitField("Submit")
+    submit = SubmitField("Save Data")
+
+    def validate_adm_no(self, field):
+        student = Student.query.filter_by(adm_no=field.data).first()
+        if student:
+            raise ValidationError(f'A student with adm no {field.data} already exist!')
 
 
 class SubjectForm(FlaskForm):
     subject = StringField(
         'Subject',
-        validators = [
+        validators=[
             DataRequired(message='Please enter a subject to add.')
         ],
         render_kw={"placeholder": "Enter Subject/Learning Area"}
     )
+
+    sub_short_form = StringField(
+        'Short form',
+        validators=[
+            DataRequired(message="Please enter the subject's short form.")
+        ],
+        render_kw={"placeholder": "Subject short form"}
+    )
+    grade_1 = BooleanField('Grade 1', description='Grade 1')
+    grade_2 = BooleanField('Grade 2', description='Grade 2')
+    grade_3 = BooleanField('Grade 3', description='Grade 3')
+    grade_4 = BooleanField('Grade 4', description='Grade 4')
+    grade_5 = BooleanField('Grade 5', description='Grade 5')
+    grade_6 = BooleanField('Grade 6', description='Grade 6')
+    grade_7 = BooleanField('Grade 7', description='Grade 7')
+    grade_8 = BooleanField('Grade 8', description='Grade 8')
+    grade_9 = BooleanField('Grade 9', description='Grade 9')
+    form_2 = BooleanField('Form 2', description='Form 2')
+    form_3 = BooleanField('Form 3', description='Form 3')
+    form_4 = BooleanField('Form 4', description='Form 4')
+    all_classes = BooleanField('All classes', description='All classes')
+
+
     add = SubmitField("Add Subject")
+
+    def validate(self, extra_validators=None):
+        rv = super().validate(extra_validators=extra_validators)
+        if not rv:
+            return False
+
+        # Check if at least one checkbox is selected
+        checkbox_fields = [field for name, field in self._fields.items() if field.type == 'BooleanField']
+        if not any(field.data for field in checkbox_fields):
+            self.all_classes.errors.append('Please select at least one class/form.')
+            return False
+
+        return True
+
 
 
 class ExamForm(FlaskForm):
@@ -415,13 +437,14 @@ class ExamForm(FlaskForm):
             DataRequired(message="Please enter the exam year."),
             NumberRange(min=2000, max=2100, message="Enter a valid year.")
         ],
-        render_kw={"placeholder": "Enter year (e.g., 2025)"}
+        render_kw={"placeholder": "Enter Year"}
     )
 
     exam_type = SelectField(
         'Exam Type',
         choices=[
             ('', 'Select Exam Type'),
+            ('opening', 'Opening'),
             ('midterm', 'Midterm'),
             ('endterm', 'End Term'),
             ('mocks', 'Mock Exam'),
@@ -437,3 +460,30 @@ class ExamForm(FlaskForm):
     )
 
     submit = SubmitField("Add Exam")
+
+class BranchForm(FlaskForm):
+    name = StringField(
+        'Branch Name',
+        validators=[
+           DataRequired(message="You must provide the name of the branch to add!") 
+        ],
+        render_kw={"placeholder": "Example Branch"}
+    )
+    manager = StringField(
+        'Branch Manager',
+        validators=[DataRequired(message="Enter Branch manager.")]
+    )
+    branch_level = SelectField(
+        'Branch Level', 
+        choices=[
+            ('', 'Select Level'),
+            ('Primary', 'Primary'),
+            ('High School', 'High School')
+        ],
+        validators=[DataRequired(message="Please select school level.")]
+    )
+    branch_head = StringField(
+        'Headteacher/Principal', 
+        validators=[DataRequired(message="Provide headteacher/principal's name.")]
+    )
+    branch_id = StringField('branch_id')

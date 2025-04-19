@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+  <div class="container d-flex links align-items-center">
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+      <div class="d-flex link__width">
+        <i class="material-icons">home</i>
+        <span>Home</span>
+      </div>
+    </a>
+     <a href="{{ url_for('admin_bp.update_sch_info') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">apartment</i>
+          <span>Manage Sch Info</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.school_setup') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">settings</i>
+          <span class="">School Settings</span>
+        </div>
+      </a>
+  </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %} 
+<div class="d-flex align-items-center bg-white p-2">
+    <hr class="flex-grow-1">
+    <h5 class="mx-2 has-text-primary"><i class="bi bi-house-fill"></i> Active Branches</h5>
+    <hr class="flex-grow-1">
+</div>
+<div class="container mt-1">
+    <!-- Flashed Messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="alert-container">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+     {% endif %}
+    {% endwith %}
+</div>
+<div class="containter mt-3 bg-white">
+    <div class="row">
+        <div class="col-lg-8 bg-light table-responsive">
+            <h5 class="text-center">Branches</h5>
+            <table class="table table-bordered small">
+                <caption><h6>Total Branches: {{ branches|length }}</h6></caption>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Headteacher/Principal</th>
+                        <th>Manager</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if branches %}
+                        {% for branch in branches %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="branch">{{ branch.name }}</td>
+                                <td>{{ branch.branch_head }}</td>
+                                <td>{{ branch.branch_manager }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning btn-edit" data-id="{{ branch.id }}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                     </button>
+                                     
+                                    <button class="btn btn-sm btn-danger">
+                                       <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-danger text-center fw-bold">No branches available yet!</p>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-4 p-4 shadow-sm">
+            <h5 class="text-center fw-light border-bottom pb-2">
+                <i class="bi bi-plus"></i> Add/Edit Branch Info
+            </h5>
+            <form action="" method="post" id="branch-form">
+                {{ form.hidden_tag() }} 
+                <!-- <input type="text" id="branch_id" name="branch_id"> -->
+                {{ form.branch_id(type="hidden", id="branch_id") }}
+                <div class="field">
+                    <label for="name" class="label">
+                      {{ form.name.label() }}<b class="text-danger"> *</b>
+                    </label>
+                    <p class="control has-icons-left has-icons-right">
+                      {{ form.name(id="name", class="input is-primary" + 
+                        (' is-danger' if form.name.errors else ''), autocomplete="off") }}
+                      {% for error in form.name.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                      {% endfor %}
+                      <span class="icon is-small is-left text-success text-muted"> 
+                        <i class="material-icons">house</i>
+                      </span>
+                    </p> 
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="field">
+                            <label for="branch_level" class="label">
+                              {{ form.branch_level.label() }}<b class="text-danger"> *</b>
+                            </label>
+                            <p class="control has-icons-left has-icons-right">
+                              <div class="select is-primary is-fullwidth">
+                                {{ form.branch_level(id="branch_level", class="is-primary" + 
+                                (' is-danger' if form.branch_level.errors else '')) }}
+                                {% for error in form.branch_level.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %} 
+                              </div>
+                            </p> 
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="field">
+                            <label for="manager" class="label">
+                              {{ form.manager.label() }}<b class="text-danger"> *</b>
+                            </label>
+                            <p class="control has-icons-left has-icons-right">
+                              {{ form.manager(id="manager", class="input is-primary" + 
+                                (' is-danger' if form.manager.errors else '')) }}
+                              {% for error in form.manager.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                              {% endfor %}
+                              <span class="icon is-small is-left text-success text-muted"> 
+                                <i class="material-icons">person</i>
+                              </span>
+                            </p> 
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="branch_head" class="label">
+                      {{ form.branch_head.label() }}<b class="text-danger"> *</b>
+                    </label>
+                    <p class="control has-icons-left has-icons-right">
+                      {{ form.branch_head(id="branch_head", class="input is-primary" + 
+                        (' is-danger' if form.branch_head.errors else '')) }}
+                      {% for error in form.branch_head.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                      {% endfor %}
+                      <span class="icon is-small is-left text-success text-muted"> 
+                        <i class="material-icons">person</i>
+                      </span>
+                    </p> 
+                </div>
+                <div class="mt-2 d-flex justify-content-end">
+                    <button type="button" class="btn btn-danger mx-2" id="btn-clear">
+                        <i class="bi bi-arrow-clockwise"></i> Clear
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Add Branch
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="line-with-text mt-5">
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Clear Form inputs. 
+        document.getElementById('btn-clear').addEventListener('click', () =>
+         document.location.reload());
+
+        var editBranchButtons = document.querySelectorAll('.btn-edit');
+        editBranchButtons.forEach(button => {
+            button.addEventListener('click', function() { 
+                let row = this.closest('tr');
+                let name = row.querySelector('.branch').textContent.trim();
+                let branchHead = row.children[2].textContent.trim();
+                let manager = row.children[3].textContent.trim();
+
+                // Optionally store branch ID in data-id attribute (recommended)
+                let branchId = this.getAttribute("data-id");
+
+                // Set form fields
+                document.getElementById('name').value = name;
+                document.getElementById('branch_head').value = branchHead;
+                document.getElementById('manager').value = manager;
+                document.getElementById('branch_id').value = branchId;
+
+                // Optionally scroll to or highlight the form
+                document.getElementById('name').focus();
+            });
+        });
+    });
+</script>
+
+{% endblock main_content %}

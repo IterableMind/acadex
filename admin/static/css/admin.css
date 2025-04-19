@@ -32,6 +32,23 @@
   width: 100%; 
 }
 
+.profile-lg {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+ }
+
+.bg-sch-primary {
+    background-color: rgb(242 242 242) !important;
+}
+
+.bg-sch-sec {
+    background-color: rgb(255 233 233) !important;
+}
 
 .side-nav > ul li {
   transition: background-color 0.4s ease, padding 0.4s ease, border-radius 0.4s ease, font-weight 0.4s ease;
@@ -268,14 +285,26 @@
 }
 
 .profile-xlg {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  border-radius: 3%;
   background-color: #e0e0e0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  cursor: pointer;
 }
+
+.profile-mlg {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
 
 .profile-sm {
   background-color: rgb(232 232 232);

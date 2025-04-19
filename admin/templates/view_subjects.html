@@ -14,7 +14,7 @@
       {% for subject in all_subjects %}
         <div class="border mb-3 p-3">
           <h5 class="text-center fw-bold" style="color: #45cab9">
-            {{ subject.subject }}
+            {{ subject.subject }} <small>({{ subject.short_form }})</small> 
           </h5>
           <table class="table table-bordered">
             <thead class="table-light">

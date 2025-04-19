@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, current_app, jsonify, request
 from . import admin_bp
 from .forms import * 
-from ..models import db, SchoolInfo, Teacher, User, Grade, Stream, Student, Subject, Roles
+from ..models import db, SchoolInfo, Teacher, User, Grade, Stream, Student, Subject, Roles, SchoolBranch
 from .. models import TeacherSubjectAssignment, Exam, ExamMarks
 from ..utils.utils import generate_username
 from ..utils.generate_pdf import generate_report_cards_pdf
@@ -82,8 +82,9 @@ def update_sch_info():
 @admin_bp.route('/view-teachers')
 @login_required
 def view_teachers():
+    branches = SchoolBranch.query.all()
     try: 
-        all_teachers = Teacher.query.all()
+        all_teachers = Teacher.query.all()[::-1]
         if not all_teachers:
             flash('No records of teachers are present!', 'info')
     except SQLAlchemyError as e: 
@@ -98,7 +99,8 @@ def view_teachers():
         'manage_teachers/view_teachers.html',
         t_active = ACTIVE,
         title = 'View Teachers',
-        teachers = all_teachers
+        teachers = all_teachers,
+        branches = branches
     ) 
 
 
@@ -106,13 +108,20 @@ def view_teachers():
 @login_required
 def add_teacher():
     form = TeacherForm()
+    branches = [(branch.name, branch.name) for branch in SchoolBranch.query.all()]
+    branches.insert(0, ("", "Select Branch"))  
+    form.branch.choices = branches 
+
     if form.validate_on_submit():
+        selected_branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
         try: 
             new_teacher = Teacher(
                 teacher_name = form.teacher_name.data.strip(),
                 tsc_no = form.tsc_no.data,
                 id_no = form.id_no.data,
                 phone_no = form.phone_no.data,
+                branch = selected_branch,
+                salary = form.salary.data,
                 email = form.email.data.strip() if form.email.data else None,
                 gender = form.gender.data
             )
@@ -142,12 +151,13 @@ def add_teacher():
             )
         
         except Exception as e:
-            db.session.rollback() 
+            db.session.rollback()
+            current_app.logger.error(e)
             flash(
                'An error occurred while adding the teacher. Please try again.', 
                'danger'
             )
-            raise InternalServerError(f"Error: {str(e)}")   
+            # raise InternalServerError(f"Error: {str(e)}")   
 
     return render_template(
         'manage_teachers/add_teacher.html',
@@ -314,19 +324,25 @@ def update_teacher_role():
         'success'
     )
     x = Roles.query.filter_by(teacher_id=teacher.id).first()
-    print(x.role)
-    print(x.grade)
-    print(x.stream)
     return redirect(url_for('admin_bp.assign_teacher_roles'))
 
 
-@admin_bp.route('/classic-view')
+@admin_bp.route('/admin-view', methods=['GET', 'POST'])
 @login_required
-def teachers_classic_view():
+def teachers_classic_view(): 
+    is_all_selected = False
+    branch = request.form.get('branch')
+    if branch == 'all':
+        teachers = Teacher.query.all()
+        is_all_selected = True
+    else:
+        branch_id = SchoolBranch.query.filter_by(name=branch).first().id
+        teachers = Teacher.query.filter_by(branch_id=branch_id).all()
     return render_template(
         'manage_teachers/classic_teachers_view.html', 
         t_active = ACTIVE,
-        teachers = Teacher.query.all(),
+        teachers = teachers,
+        all = is_all_selected,
         title = 'Classic Teachers View'
     )
 
@@ -473,21 +489,20 @@ def student_dash():
 @login_required
 def add_student(): 
     form = StudentRegistrationForm()
+    branches = [(branch.name, branch.name) for branch in SchoolBranch.query.all()]
+    branches.insert(0, ("", "Select Branch"))  
+    form.branch.choices = branches 
     if form.validate_on_submit(): 
+        selected_branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
         student = Student(
             fullname = form.fullname.data,
-            grade = form.grade.data,
-            dob = form.dob.data,
-            adm_no = form.adm_no.data,
-            adm_date = form.adm_date.data,
+            grade = form.grade.data, 
+            adm_no = form.adm_no.data, 
             gender = form.gender.data,
             stream = form.stream.data,
-            previous_school = form.previous_school.data,
-            parent_name = form.parent_name.data,
-            relationship = form.relationship.data,
-            contact_phone = form.contact_phone.data,
-            id_no = form.id_no.data,
-            email = form.email.data,
+            branch = selected_branch,
+            parent_name = form.parent_name.data, 
+            contact_phone = form.contact_phone.data, 
             health_info = form.health_info.data
         )
         strm = request.form.get('streams')
@@ -513,6 +528,90 @@ def add_student():
         form = form
     )
 
+
+@admin_bp.route('/update_student_biodata', methods=['POST'])
+@login_required
+def update_student_biodata():
+    adm_no = request.form.get('adm_no')
+    stream = request.form.get('stream')
+    branch_name = request.form.get('branch')
+
+    # Fetch the student
+    target_student = Student.query.filter_by(adm_no=adm_no).first()
+
+    if not target_student:
+        flash('Student not found!', 'danger')
+        return redirect(url_for('admin_bp.dashboard'))
+
+    # Query branch from name
+    branch = SchoolBranch.query.filter_by(name=branch_name).first()
+    if not branch:
+        flash('Invalid branch provided.', 'danger')
+        return redirect(url_for('admin_bp.dashboard'))
+
+    # Update student data
+    target_student.fullname = request.form.get('fullname')
+    target_student.gender = request.form.get('gender')
+    target_student.grade = request.form.get('grade') 
+    target_student.parent_name = request.form.get('parent_name')
+    target_student.contact_phone = request.form.get('contact_phone')
+    target_student.branch_id = branch.id
+
+    target_student.health_info = request.form.get('health_info')
+
+    if stream:
+        target_student.stream = stream
+
+    # Commit to DB
+    try:
+        db.session.commit()
+        flash('Student information updated successfully!', 'success')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating student biodata: {e}")
+        flash('An error occurred while updating the student.', 'danger')
+
+    # Re-render the searched student page
+    form = SearchStudent()
+    return render_template(
+        'manage_students/searched_student.html',
+        form=form,
+        student_info=target_student,
+        branches = SchoolBranch.query.all(),
+        grades = Grade.query.all(),
+        s_active=ACTIVE
+    ) 
+
+# Update the student passport
+@admin_bp.route('/update_student_passport', methods=['POST'])
+@login_required
+def update_student_passport(): 
+    student_adm_no = request.form.get('adm_no')
+    target_student = Student.query.filter_by(adm_no=student_adm_no).first()
+    
+    if not target_student:
+        flash('Student not found!', 'danger')
+        return redirect(url_for('admin_bp.dashboard'))
+
+    photo_file = request.files.get('passport')
+    if photo_file:
+        target_student.photo = img_editor(photo_file)
+        try:
+            db.session.commit()
+            flash('Passport updated successfully.', 'info')
+        except SQLAlchemyError as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            flash('Oops! Something went wrong! Couldn\'t update passport!', 'danger')
+
+    # After updating, render the searched_student.html with updated data
+    form = SearchStudent()
+    return render_template(
+        'manage_students/searched_student.html', 
+        form=form,
+        student_info=target_student,
+        s_active=ACTIVE
+    )
 
 
 @admin_bp.route('/get_students', methods=['POST', 'GET'])
@@ -558,6 +657,7 @@ def display_students_per_grade():
 @login_required
 def search_student():
     form = SearchStudent()
+    branches = SchoolBranch.query.all()
     search_data = request.form.get('search_input').strip()
     if search_data:
         try:
@@ -569,7 +669,7 @@ def search_student():
             ).first() 
 
             if student is None:
-                flash('Oops the student you are searching for is not available!', 
+                flash('Oops! There is no student with the credentials you entered!', 
                     'danger') 
                 return redirect(url_for('admin_bp.dashboard'))
             
@@ -577,6 +677,8 @@ def search_student():
                 'manage_students/searched_student.html', 
                 form = form,
                 student_info = student,
+                branches = branches,
+                grades = Grade.query.all(),
                 s_active = ACTIVE,
             )
         
@@ -599,7 +701,9 @@ def view_subjects():
     try:
         all_subjects = Subject.query.all()
         grades = Grade.query.all()
-    except:
+    except SQLAlchemyError as e:
+        current_app.logger.error(e)
+        db.session.rollback()
         flash('Failured to load subjects! There may be no subjects or an internal error occured!')
     return render_template(
         'view_subjects.html',
@@ -618,30 +722,37 @@ def add_subject():
     all_subjects = Subject.query.all()[::-1]
     form = SubjectForm()
     if form.validate_on_submit():
-        sub = Subject(subject=form.subject.data.strip())
-        # Ensure the entered subject name is not just numbers
+        selected_grades = [
+            field.label.text for name, field in form._fields.items()
+            if field.type == 'BooleanField' and field.data and name != 'all_classes'
+        ] 
+        sub = Subject(
+            subject = form.subject.data.strip(),
+            grades = selected_grades,
+            short_form = form.sub_short_form.data
+        )
+
         if sub.subject.isdigit():
             flash(f'Oops! Subject name cannot be numbers!', 'danger')
             return redirect(url_for('admin_bp.add_subject')) 
-        # check if entered subject already exist
+
         if sub.subject.lower() in [s.subject.lower() for s in all_subjects]:
-            flash(f'{sub.subject} already exist in the system!', 'danger')
+            flash(f'{sub.subject} already exists in the system!', 'danger')
             return redirect(url_for('admin_bp.add_subject'))
+
         try:
             db.session.add(sub)
             db.session.commit()
             flash('Subject added successfully!', 'success')
-            return redirect(
-                url_for('admin_bp.add_subject')
-            )
+            return redirect(url_for('admin_bp.add_subject'))
         except SQLAlchemyError as e:
             db.session.rollback()
             flash(error_sms, 'danger')
-            current_app.logger.error(f'Subject Insertion Error {e} occured!')
+            current_app.logger.error(f'Subject Insertion Error {e} occurred!')
         except:
             db.session.rollback()
             flash(error_sms, 'danger')
-            current_app.logger.error('An Error occured') # Work to change this later.
+            current_app.logger.error('Unknown error occurred!')
 
     return render_template(
         'add_subject.html', 
@@ -765,7 +876,6 @@ def printouts():
     )
 
 
-
 @admin_bp.route('/download_marklist', methods=['GET', 'POST'])
 @login_required
 def download_marklist():
@@ -828,6 +938,8 @@ def add_new_exam():
         ex_active=ACTIVE
     ) 
 
+
+
 @admin_bp.route('/admin_marks_entry')
 @login_required
 def admin_marks_entry():
@@ -840,22 +952,27 @@ def admin_marks_entry():
     # Fetch all grades
     all_grades = Grade.query.all()
     
-    # Find grades where marks are missing
+    # Prepare dict for grades missing marks
     grades_without_marks = {}
+
     for grade in all_grades:
-        subjects = Subject.query.all()  # Get all subjects
-        missing_subjects = []
-        
+        # Get only subjects that include this grade in their assigned list
+        subjects = [
+            subject for subject in Subject.query.all()
+            if subject.grades and grade.grade_name in subject.grades
+        ]
+
+        missing_subjects = [] 
         for subject in subjects:
             # Get all students in this grade
             students_in_grade = Student.query.filter_by(grade=grade.grade_name).all()
 
-            # Check if any student in this grade has marks for this subject
+            # Check if all students in the grade have marks for this subject
             marks_exist = all(
                 ExamMarks.query.filter_by(
                     exam_id=open_exam.id,
                     subject_id=subject.id,
-                    student_id=student.id  # Ensure we check for students in this grade
+                    student_id=student.id
                 ).first() is not None
                 for student in students_in_grade
             )
@@ -868,10 +985,11 @@ def admin_marks_entry():
 
     return render_template(
         'manage_exams/admin_marks_entry.html', 
-        open_exam = open_exam,
-        ex_active = ACTIVE,
+        open_exam=open_exam,
+        ex_active=ACTIVE,
         grades_without_marks=grades_without_marks
     )
+
 
 @admin_bp.route('/get_students_for_grade')
 @login_required
@@ -1073,10 +1191,6 @@ def process_report_forms():
         students = Student.query.filter_by(grade=grade).all()
         tot_subs = TeacherSubjectAssignment.query.filter_by(grade=grade).count()
     
-        
-        # if stream:
-        #     students = [s for s in students if s.stream == stream]
-
         if stream:
             # Get teacher-subject assignments for this grade
             teacher_assignments = TeacherSubjectAssignment.query.join(Teacher).join(Subject).filter(
@@ -1087,7 +1201,6 @@ def process_report_forms():
             teacher_assignments = TeacherSubjectAssignment.query.join(Teacher).join(Subject).filter(
                 TeacherSubjectAssignment.grade == grade
             ).all()
-
 
         # Store teacher assignments in a dictionary {subject_name: teacher_name}
         teacher_dict = {assignment.subject.subject: assignment.teacher.teacher_name for assignment in teacher_assignments}
@@ -1148,6 +1261,55 @@ def process_report_forms():
         report_cards=report_cards
     )
 
+
+@admin_bp.route('/manage_branch', methods=['GET', 'POST'])
+def manage_branch():
+    form = BranchForm()
+    branches = SchoolBranch.query.all()
+    branch_id = request.form.get("branch_id")
+    if branch_id:
+        form.branch_id.data = branch_id 
+    if form.validate_on_submit():
+        if branch_id:
+            # UPDATE flow
+            branch_info = SchoolBranch.query.get(branch_id)
+            if branch_info:
+                branch_info.name = form.name.data
+                branch_info.branch_manager = form.manager.data
+                branch_info.branch_head = form.branch_head.data
+                branch_info.branch_level = form.branch_level.data
+                try:
+                    db.session.commit()
+                    flash('Branch info updated successfully.', 'info')
+                    return redirect(url_for('admin_bp.manage_branch'))
+                except SQLAlchemyError as e:
+                    current_app.logger.error(e)
+                    db.session.rollback()
+                    flash('Error updating branch. Please try again.', 'danger')
+        else:
+            # ADD flow
+            new_branch = SchoolBranch(
+                name = form.name.data,
+                branch_manager = form.manager.data,
+                branch_head = form.branch_head.data,
+                branch_level = form.branch_level.data
+            )
+            try:
+                db.session.add(new_branch)
+                db.session.commit()
+                flash('Branch was added successfully.', 'info')
+                return redirect(url_for('admin_bp.manage_branch'))
+            except SQLAlchemyError as e:
+                current_app.logger.error(e)
+                db.session.rollback()
+                flash('Oops! Something went wrong. Please try again.', 'danger')
+                
+    return render_template(
+        'add_branch.html', 
+        b_active = ACTIVE,
+        branches = branches,
+        form = form
+    )
 
 
 # Logout user

@@ -4,7 +4,7 @@
 {% block horizontal_nav %} 
    <!-- Teacher management utilities -->
    <div class="container d-flex links align-items-center">
-      <a href="">
+      <a href="{{ url_for('admin_bp.view_teachers') }}">
          <div class="d-flex link__width sub--link--active">
             <i class="material-icons">visibility</i>
             <span class="">View teachers</span>
@@ -43,16 +43,11 @@
         </button>
       </h2>
       <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
-        <div class="accordion-body bg-white pt-3">
+        <div class="accordion-body bg-white pt-3 pb-2">
             <a href="{{ url_for('admin_bp.view_teachers') }}" 
                style="text-decoration: none;">
                <button class="btn btn-danger btn-sm">
                   <i class="fa fa-print"></i> Print View
-               </button>
-            </a>
-            <a href="{{ url_for('admin_bp.teachers_classic_view') }}" class="mx-2">
-               <button class="btn btn-secondary btn-sm">
-                  <i class="fa fa-eye" aria-hidden="true"></i> Detailed View
                </button>
             </a>
         </div>
@@ -62,13 +57,25 @@
 <div class="container pt-1 pb-3 bg-light mt-1">
  {% block display%}
  <div class="row d-flex justify-content-center">
-   <h6 class="text-muted text-center">
-      Showing all teachers in a detailed view.
-   </h6>
+   <div class="d-flex align-items-center p-2">
+    <hr class="flex-grow-1 bg-success">
+    <h6 class="mx-2 has-text-primary">
+        {% if teachers %}
+            {% if all %} 
+                Showing all teachers in a detailed view.   
+            {% else %}
+                Showing {{ teachers[0].branch.name }} teachers in a detailed view.
+            {% endif %}
+        {% else %}
+            No teachers to show yet.
+        {% endif %}
+    </h6>
+    <hr class="flex-grow-1 bg-success">
+   </div>
    {% for teacher in teachers %}
       <div class="col-md-5 bg-white shadow-sm mx-2 mt-2 p-3 rounded-1">
          <div class="d-flex justify-content-center">
-            <div class="profile-xlg" style="background-image: 
+            <div class="profile-mlg" style="background-image: 
             url('{{ url_for('static', 
             filename='images/profile-pictures/{0}'.format(teacher.passport_filename)) }}');"
             >
@@ -122,6 +129,6 @@
 </div>
 <!-- Footer -->
 <div class="line-with-text mt-4">
-   <small class="text-muted">Acadex &copy;2024 Developed by Oyaro Jared</small>
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
 </div>
 {% endblock main_content %}
