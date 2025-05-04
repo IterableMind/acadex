@@ -1,13 +1,18 @@
+import traceback
 from flask import render_template, url_for, flash, redirect, current_app, jsonify, request
+from flask import send_file
+import io
 from . import admin_bp
 from .forms import * 
-from ..models import db, SchoolInfo, Teacher, User, Grade, Stream, Student, Subject, Roles, SchoolBranch
-from .. models import TeacherSubjectAssignment, Exam, ExamMarks
+from ..models import db, SchoolInfo, Teacher, User, Grade, Stream, Student, Subject, Role, SchoolBranch, Staff
+from .. models import TeacherSubjectAssignment, Exam, ExamMarks, GradeStreamBranch
 from ..utils.utils import generate_username
+from ..utils.generate_students_lists import generate_marklist
+from ..utils.generate_teachers_pdf_list import generate_teacher_list_pdf
 from ..utils.generate_pdf import generate_report_cards_pdf
 from ..utils.image_processor import preprocess_image as img_editor 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_, func, distinct
 from werkzeug.exceptions import InternalServerError
 from flask_login import login_required, current_user, logout_user
 
@@ -17,22 +22,101 @@ ACTIVE = 'link--active'
 HORIZONTAL_ACTIVE = 'sub--link--active'
             
 
-@admin_bp.route('/dashboard', methods = ['GET', 'POST'])
+@admin_bp.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-  students_count = 0
-  try:
-    students_count = Student.query.count()
-  except SQLAlchemyError as e:
-    current_app.logger.error('e')
-    
-  return render_template(
-    'dashboard.html',
-    students_count = students_count,
-    form = SearchStudent(),
-    d_active = ACTIVE, 
-    title = 'Admin'
-  )
+    form = SearchStudent()
+    totals = {
+        'staff_total': 0,
+        'teacher_total': 0,
+        'branch_total': 0,
+        'student_total': 0
+    }
+    branch_data = []
+
+    try:
+        branches = SchoolBranch.query.all()
+        totals = {
+            'staff_total': Staff.query.count(),
+            'teacher_total': Teacher.query.count(),
+            'branch_total': len(branches),
+            'student_total': Student.query.count()
+        }
+
+        for branch in branches:
+            student_count = Student.query.filter_by(branch_id=branch.id).count()
+            all_students = Student.query.filter_by(branch_id=branch.id).all()
+            male_students = Student.query.filter_by(branch_id=branch.id, gender='Male').count()
+            female_students = Student.query.filter_by(branch_id=branch.id, gender='Female').count()
+            # assigned_grades = Grades
+            teacher_count = Teacher.query.filter_by(branch_id=branch.id).count()
+            staff_count = Staff.query.filter_by(branch_id=branch.id).count()
+
+            # Example: get all grades with at least one student in a specific branch
+            branch_grades = (
+                    db.session.query(distinct(Student.grade))
+                    .filter(Student.branch_id == branch.id)
+                    .all()
+                )
+            # Flatten the result because query returns list of tuples
+            branch_grades = [g[0] for g in branch_grades]
+               
+            def format_grades(grades_list):
+                form_grades = []
+                grade_grades = []
+                
+                for g in grades_list:
+                    if g.startswith('Form'):
+                        form_grades.append(g)
+                    elif g.startswith('Grade'):
+                        grade_grades.append(g)
+
+                # Sort them numerically descending
+                form_grades.sort(key=lambda x: int(x.split()[1]), reverse=False)
+                grade_grades.sort(key=lambda x: int(x.split()[1]), reverse=False)
+
+                # Combine the two lists
+                ordered = grade_grades +  form_grades
+                return ordered
+            
+            # Aggregate students by grade
+            grade_distribution = {}
+            for student in all_students:
+                grade = student.grade
+                if grade not in grade_distribution:
+                    grade_distribution[grade] = 0
+                grade_distribution[grade] += 1
+
+            branch_data.append({
+                "id": branch.id,
+                "name": branch.name,
+                "manager": branch.branch_manager,
+                "head": branch.branch_head,
+                "level": branch.branch_level,
+                "student_count": student_count,
+                "teacher_count": teacher_count,
+                "staff_count": staff_count,
+                "male_students": male_students,
+                "female_students": female_students,
+                "all_students": all_students,
+                "branch_grades": format_grades(branch_grades),
+                "grade_distribution": grade_distribution  # Add grade distribution here
+            })
+
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error: {e}\nTraceback: {traceback.format_exc()}')
+        flash('Sorry, an error was encountered when querying the database! Please try again later.', 'danger')
+
+    return render_template(
+        'dashboard.html',
+        form=form,
+        totals=totals,
+        d_active=ACTIVE,
+        branches=branch_data,
+        title='Admin'
+    )
 
 
 """
@@ -69,7 +153,7 @@ def update_sch_info():
       except Exception as e:
           db.session.rollback()
           flash('An unexpected error occurred. Please try again later.', 'error')
-          current_app.logger.error(f"Exception: {e}") 
+          current_app.logger.error(f'Error: {e}\nTraceback: {traceback.format_exc()}')
 
     return render_template(
         'update_sch_info.html', 
@@ -167,19 +251,27 @@ def add_teacher():
     )
 
 
-
 @admin_bp.route('/assign_teacher_roles', methods=['GET', 'POST'])
 @login_required
 def assign_teacher_roles():
+    form = TeacherForm() 
+    form.branch.choices = [(branch.name, branch.name) for branch in SchoolBranch.query.all()]
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 7  
+    teachers_paginated = Teacher.query.order_by(Teacher.id.desc()).paginate(page=page, per_page=per_page)
+
     try:
         subjects = Subject.query.all()
     except:
-        pass
+        subjects = []
+
     return render_template(
         'manage_teachers/teachers_roles.html',
-        t_active = ACTIVE,
-        subjects = subjects,
-        all_teachers = Teacher.query.all()[::-1]
+        t_active=ACTIVE,
+        subjects=subjects,
+        form=form,
+        teachers_paginated=teachers_paginated
     )
 
 
@@ -267,64 +359,111 @@ def update_profile():
     )
 
 
-@admin_bp.route('/update_teacher_role', methods=['POST'])
+@admin_bp.route('/update_teacher_role/<int:teacher_id>', methods=['GET', 'POST'])
 @login_required
-def update_teacher_role():
-    stream = request.form.get('stream')
-    roles_info = {
-        'name': request.form.get('teacher-name'),
-        'role': request.form.get('role')
-    }
+def update_teacher_role(teacher_id):
+    """
+     Update the roles assigned to the teacher. A teacher can have
+     more than one role in addition of being a teacher as the basic role.
+    """
+    branch_name = ''
 
-    def set_stream():
-        # Update stream if present.
-        if stream:
-            roles_info['stream'] = stream
-
-    if roles_info['role'] == 'Class Teacher':
-        roles_info['grade'] = request.form.get('grade')
-        set_stream()
-
-    teacher = Teacher.query.filter_by(
-        teacher_name = roles_info['name']
-    ).first()
-    
-    exist_roles = Roles.query.filter_by(teacher_id = teacher.id).first()
-    if exist_roles:
-        db.session.delete(exist_roles)
-        db.session.commit() 
-
-    # no roles present
-    role = Roles(role = roles_info['role'], teacher_id = teacher.id)
-    db.session.add(role)
-    db.session.flush()
-    
-    if roles_info.get('grade') != None:
-        role.grade = roles_info['grade']
-        set_stream()
-    try: 
-        db.session.commit() # comment either of the two changes.
-        updated_tchr_roles = Roles.query.filter_by(
-            teacher_id = teacher.id
-        ).first() 
-
-        if updated_tchr_roles.role == 'Class Teacher': 
-            if roles_info.get('grade') != None:
-                updated_tchr_roles.grade = roles_info['grade']
-                if stream:
-                    updated_tchr_roles.stream = stream
-        db.session.commit()
-
+    try:
+        teacher = Teacher.query.filter_by(id=teacher_id).first()
+        if not teacher:
+            flash('Teacher not found.', 'danger')
+            return redirect(url_for('admin_bp.assign_teacher_roles'))
+        branch = SchoolBranch.query.filter_by(id=teacher.branch_id).first()
+        if branch:
+            branch_name = branch.name
     except SQLAlchemyError as e:
         db.session.rollback()
-        current_app.logger.error(f'An Error {e} occured!')
+        current_app.logger.error(f'Error {e}, \nTraceback: {traceback.format_exc()}')
+        flash('Oops! Something went wrong in our side. Please try again.', 'warning')
+    except Exception as e:
+        current_app.logger.error(f'{e} \n TRACEBACK: {traceback.format_exc()}')
+        flash('Unexpected error occurred.', 'danger')
 
-    flash(
-        f'The role for {roles_info["name"]} was updated successfully!', 
-        'success'
-    )
-    x = Roles.query.filter_by(teacher_id=teacher.id).first()
-    return redirect(url_for('admin_bp.assign_teacher_roles'))
+    form = AssignTeacherRoleForm()
+    if form.validate_on_submit(): 
+        try:
+            role = form.role.data
+            center_branch = form.center_branch.data 
+            is_center_manager = form.is_center_manager.data
+            stream = request.form.get('stream')
+            
+            grade = Grade.query.filter_by(grade_name=form.grade.data).first()
+            # Validate stream entered.
+            if branch_name and grade and stream:
+                valid_streams = GradeStreamBranch.query.filter_by(
+                    grade_id=grade.id,
+                    branch_id=branch.id
+                ).all()
+
+                if stream not in [s.stream_name for s in valid_streams]:
+                    flash('Invalid stream name!', 'danger')
+                    return redirect(url_for('admin_bp.assign_teacher_roles'))
+
+            previous_assigned_roles = Role.query.filter_by(
+                teacher_id=teacher.id
+            ).first()
+
+            if previous_assigned_roles: 
+                # Update teacher roles
+                if center_branch:
+                    previous_assigned_roles.center_branch = center_branch.name
+                if form.grade.data:
+                    previous_assigned_roles.grade = grade.grade_name
+                if stream:
+                    previous_assigned_roles.stream = stream
+                if role:
+                    previous_assigned_roles.role = role
+                
+            else:
+                teacher_roles = Role(
+                    teacher_id=teacher.id,
+                    role= role if role else 'teacher'
+                )
+                
+                if is_center_manager and center_branch:
+                    teacher_roles.center_branch = center_branch.name
+                if grade:
+                    teacher_roles.grade = grade.grade_name
+                if stream:
+                    teacher_roles.stream = stream
+                db.session.add(teacher_roles)
+            
+            try:
+                db.session.commit()
+                # Update database data.
+                flash(f'Teacher roles upadted successfully for teacher {teacher.teacher_name}.',
+                'info'
+                ) 
+                return redirect(url_for('admin_bp.assign_teacher_roles'))
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                current_app.logger.error(f'Error: {e} \nTRACEBACK: {traceback.format_exc()}')
+                flash('Unexpected error occured! System support has been notified.', 'danger')
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error: {e} \nTRACEBACK: {traceback.format_exc()}')
+            flash('Unexpected error occured! System support has been notified.', 'danger')
+        
+
+    form.grade.data = ''
+    previous_assigned_roles = Role.query.filter_by(
+        teacher_id=teacher.id).first()
+    
+    return render_template(
+        'manage_teachers/update_teacher_role.html',
+        t_active = ACTIVE,
+        form = form, 
+        teacher = teacher,
+        branch_name = branch_name,
+        previous_assigned_roles = previous_assigned_roles,
+        title = 'Update Teacher Roles'
+    ) 
+
 
 
 @admin_bp.route('/admin-view', methods=['GET', 'POST'])
@@ -347,98 +486,347 @@ def teachers_classic_view():
     )
 
 
-# Delete the target teacher and his/her related details from the system.
+@admin_bp.route('/fetch_teacher_data', methods=['POST'])
+@login_required
+def fetch_teacher_data():
+    data = request.get_json()   
+    teacher_id = data.get('id')  
+
+    if not teacher_id:
+        return jsonify({'error': 'Missing teacher ID'}), 400
+
+    teacher = Teacher.query.get_or_404(teacher_id)
+    branch = SchoolBranch.query.filter_by(id=teacher.branch_id).first()
+
+    return jsonify({
+        'id': teacher.id,
+        'fullname': teacher.teacher_name,
+        'email': teacher.email,
+        'salary': teacher.salary,
+        'gender': teacher.gender,
+        'phone_no': teacher.phone_no,
+        'branch': branch.name,
+        'id_no': teacher.id_no,
+        'tsc_no': teacher.tsc_no 
+    })
+
+
+@admin_bp.route('/edit_teacher_data', methods=['POST'])
+@login_required
+def edit_teacher_data():
+    form = TeacherForm()
+    branch = form.branch.data 
+    fullname = form.teacher_name.data
+    tsc_no = form.tsc_no.data
+    id_no = form.id_no.data
+    phone_no = form.phone_no.data
+    salary = form.salary.data
+
+    mandatory_fields = [branch, fullname, id_no, phone_no]
+    if not all(field is not None and str(field).strip() for field in mandatory_fields):
+        flash('Failed to update teacher data. Some required fields are empty.', 'danger')
+        return redirect(url_for('admin_bp.assign_teacher_roles'))
+
+    teacher_id = request.form.get('tr-id')
+    teacher = Teacher.query.filter_by(id=teacher_id).first()
+    if not teacher:
+        flash('Teacher not found.', 'danger')
+        return redirect(url_for('admin_bp.assign_teacher_roles'))
+
+    # Check if id_no is used by another teacher
+    if Teacher.query.filter(Teacher.id_no == id_no, Teacher.id != teacher.id).first():
+        flash('ID Number already exists for another teacher.', 'danger')
+        return redirect(url_for('admin_bp.assign_teacher_roles'))
+
+    # Check if phone_no is used by another teacher
+    if Teacher.query.filter(Teacher.phone_no == phone_no, Teacher.id != teacher.id).first():
+        flash('Phone Number already exists for another teacher.', 'danger')
+        return redirect(url_for('admin_bp.assign_teacher_roles'))
+    
+
+    new_branch = SchoolBranch.query.filter_by(name=branch).first()
+
+    if teacher.branch.id != new_branch.id:
+        # Delete subjects assigned to the teacher in old branch.
+        TeacherSubjectAssignment.query.filter_by(teacher_id=teacher.id).delete()
+
+    teacher.branch = new_branch
+    teacher.teacher_name = fullname
+    teacher.tsc_no = tsc_no
+    teacher.id_no = id_no  # ← you can safely update now
+    teacher.phone_no = phone_no
+    teacher.salary = salary
+
+    
+    db.session.commit()
+
+    flash('Teacher\'s details updated successfully.', 'success')
+    return redirect(url_for('admin_bp.assign_teacher_roles'))
+
+ 
+
+@admin_bp.route('/generate_teachers_list_pdf', methods=['POST'])
+@login_required
+def generate_teachers_list_pdf():
+    target_branch = request.form.get('target-branch', '').strip()
+    teachers = []
+    branch_name = 'All'
+    address = 'P.O. Box 289, Nairobi' 
+
+    try:
+        if target_branch.lower() == 'all':
+            teachers = Teacher.query.all()
+            branch_name = "BUSHRA SCHOOLS TEACHERS [ALL]"
+        else:
+            branch = SchoolBranch.query.filter_by(name=target_branch).first()
+            if not branch:
+                flash(f"No branch found with name '{target_branch}'.", 'warning')
+                return redirect(url_for('admin_bp.view_teachers')) 
+            teachers = Teacher.query.filter_by(branch_id=branch.id).all()
+            branch_name = branch.name
+
+        if not teachers:
+            flash(f"No teachers found for branch '{branch_name}'.", 'warning')
+            return redirect(url_for('admin_bp.view_teachers'))
+
+        addr = SchoolInfo.query.first().address
+        address = addr if addr else 'No Address Found'
+        
+        return generate_teacher_list_pdf(teachers, branch_name, address)
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash('Something went wrong. Please try again later.', 'danger')
+        current_app.logger.error(f'Error: {e}, Traceback: {traceback.format_exc()}')
+        return redirect(url_for('admin_bp.view_teachers'))
+
+
+
 @admin_bp.route('delete_teacher', methods=['POST'])
 @login_required
 def delete_teacher(): 
+    target_teacher = request.form.get('delete-teacher-name')
     try:
-        tr = Teacher.query.filter_by(teacher_name = request.form.get
-            ('delete-teacher-name')).first() 
-        tr_role = Roles.query.filter_by(teacher_id = tr.id).first() 
-        
-        # Delete the subjects awarded to the teacher
-        for t in TeacherSubjectAssignment.query.all():
-            if t.teacher_id == tr.id:
-                db.session.delete(t)
+        tr = Teacher.query.filter_by(teacher_name=target_teacher).first()
+        if not tr:
+            flash('Teacher not found.', 'warning')
+            return redirect(url_for('admin_bp.assign_teacher_roles'))
 
-        User.query.filter_by(teacher_id = tr.id).delete()
-        if tr_role: db.session.delete(tr_role) 
+        # Delete associated roles
+        tr_role = Role.query.filter_by(teacher_id=tr.id).first()
+        if tr_role:
+            db.session.delete(tr_role)
 
+        # Delete assigned subjects
+        for t in TeacherSubjectAssignment.query.filter_by(teacher_id=tr.id).all():
+            db.session.delete(t)
+
+        # Delete user login account
+        User.query.filter_by(teacher_id=tr.id).delete()
+
+        # Delete teacher record
         db.session.delete(tr)
-        db.session.commit() 
-        flash(f'{tr.teacher_name} was succefully deleted!', 'info')
-        return redirect(url_for('admin_bp.assign_teacher_roles'))
-    
+        db.session.commit()
+
+        flash(f'Teacher {tr.teacher_name} was successfully deleted!', 'info')
     except SQLAlchemyError as e:
         db.session.rollback()
-        current_app.logger.error(e)
-    flash('Sorry, something went wrong on our side!', 'danger')
+        current_app.logger.error(f'Error: {e} \nTRACEBACK\n {traceback.format_exc()}')
+        flash('Sorry, something went wrong on our side!', 'danger')
+
     return redirect(url_for('admin_bp.assign_teacher_roles'))
 
 
-# Set up school status in terms of grades and streams.
-@admin_bp.route('/school-setup', methods = ['GET', 'POST'])
+
+@admin_bp.route('/manage_staff', methods=['GET', 'POST'])
 @login_required
-def school_setup(): 
-    form = GradeForm()
-    if form.validate_on_submit(): 
-        grades_info = {
-            'grade': form.grade_name.data,
-            'stream1': form.stream1.data,
-            'stream2': form.stream2.data,
-            'stream3': form.stream3.data,
-        } 
-        streams = [
-            grades_info['stream1'], 
-            grades_info['stream2'],
-            grades_info['stream3']
-        ]
-        grade = Grade.query.filter_by(grade_name = grades_info['grade']).first()
-        current_streams = Stream.query.filter_by(grade_id = grade.id).all()
+def manage_staff(): 
+    form = StaffForm()
+    # Use branch names as both value and label
+    form.branch.choices = [('', 'Select Branch')] + [
+        (branch.name, branch.name) for branch in SchoolBranch.query.all()
+    ]
 
-        if any(streams):
-            # Muilt Streams
-            try:
-                if streams[0]:
-                    stream1 = Stream(stream_name = streams[0], grade_id = grade.id)
-                    if len(current_streams) > 1 and current_streams[0]:
-                        current_streams[0].stream_name = streams[0]
-                    else:
-                        db.session.add(stream1)
-                if streams[1]:
-                    stream2 = Stream(stream_name = streams[1], grade_id = grade.id)
-                    if len(current_streams) > 2 and current_streams[1]:
-                        current_streams[1].stream_name = streams[1]
-                    else:
-                        db.session.add(stream2)
-                if streams[2]:
-                    stream3 = Stream(stream_name = streams[2], grade_id = grade.id)
-                    if len(current_streams) > 2 and current_streams[2]:
-                        current_streams[2].stream_name = streams[2]
-                    else:
-                        db.session.add(stream3)
-                db.session.commit() 
+    if form.validate_on_submit():
+        try:
+            # Fetch the branch by name
+            selected_branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
+            if not selected_branch:
+                flash('Invalid branch selected.', 'danger')
+                return redirect(url_for('admin_bp.manage_staff'))
 
-            except SQLAlchemyError as e: 
-                db.session.rollback()
-                current_app.logger(f'An error occured: {e}')
-        else:
-            for stream in Stream.query.filter_by(grade_id = grade.id).all():
-                db.session.delete(stream)
+            # Create new staff instance
+            new_staff = Staff(
+                fullname=form.fullname.data.strip(),
+                branch_id=selected_branch.id,
+                designation=form.designation.data.strip(),
+                phone_number=form.phone_number.data.strip()
+            )
+
+            db.session.add(new_staff)
             db.session.commit()
+            flash('Staff member added successfully.', 'success')
+            return redirect(url_for('admin_bp.manage_staff'))
 
-        flash('Grade information updated successfully!', 'success')
-        return redirect(url_for('admin_bp.school_setup')) 
-    
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error adding staff: {e}")
+            flash('An error occurred while adding the staff member.', 'danger')
+
     return render_template(
-        'school_setup.html',
-        form = form,
-        d_active = ACTIVE, 
-        title = 'Grades/Streams setup'
+        'manage_staff.html',
+        st_active=ACTIVE,
+        form=form,
+        all_staff = Staff.query.all()[::-1],
+        branches = SchoolBranch.query.all(),
+        title='Manage Staff'
     )
 
 
-# Endpoint to fetch streams of the selected grade.
+@admin_bp.route('/update_staff_info', methods=['POST'])
+@login_required
+def update_staff_info():
+    """Update staff member information"""
+    
+    original_name = request.form.get('hidden-staff-name').strip()
+    updated_name = request.form.get('staffname').strip()
+    updated_phone = request.form.get('phone-number').strip()
+    updated_designation = request.form.get('staff-design')
+    updated_branch_name = request.form.get('staff-branch')
+
+    current_staff = Staff.query.filter_by(fullname=original_name).first()
+
+    # Check if another staff member already has the new name
+    existing_name_match = Staff.query.filter_by(fullname=updated_name).first()
+    if existing_name_match and existing_name_match.id != current_staff.id:
+        flash(f'A staff member with the name "{updated_name}" already exists.', 'danger')
+        return redirect(url_for('admin_bp.manage_staff'))
+
+    # Check if another staff member already has the new phone number
+    existing_phone_match = Staff.query.filter_by(phone_number=updated_phone).first()
+    if existing_phone_match and existing_phone_match.id != current_staff.id:
+        flash(f'Phone number "{updated_phone}" belong to another staff.', 'danger')
+        return redirect(url_for('admin_bp.manage_staff'))
+    
+    # Check if phone number is made up of exactly 10 digits
+    if len(str(updated_phone)) != 10:
+        flash(f'The phone number "{updated_phone}" you entered is invalid!', 'danger')
+        return redirect(url_for('admin_bp.manage_staff'))
+
+
+    # Update the staff details
+    current_staff.fullname = updated_name
+    current_staff.phone_number = updated_phone
+    current_staff.designation = updated_designation
+    current_staff.branch = SchoolBranch.query.filter_by(name=updated_branch_name).first()
+
+    try:
+        db.session.commit()
+        current_app.logger.info(
+            f'{current_staff} info updated by {current_user.teacher.teacher_name}'
+        )
+        flash('Staff information updated successfully.', 'info')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        flash('Oops! Failed to update staff info. Please try again later.', 'danger')
+
+    return redirect(url_for('admin_bp.manage_staff'))
+
+
+@admin_bp.route('/delete_staff', methods=['POST'])
+@login_required
+def delete_staff():
+    staff_name = request.form.get('staff-name')
+    if staff_name:
+        try:
+            staff = Staff.query.filter_by(fullname=staff_name).first()
+            db.session.delete(staff)
+            db.session.commit()
+            flash('Staff member deleted successfully.', 'info')
+            current_app.logger.info(f"Staff '{staff_name}' deleted by user '{current_user.username}' (ID: {current_user.id})")
+        except SQLAlchemyError as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            flash('An error occured when deleting staff! Please try again later.', 'danger')
+    return redirect(url_for('admin_bp.manage_staff'))
+
+
+@admin_bp.route('/grade_streams_setup', methods=['GET', 'POST'])
+@login_required
+def grade_streams_setup():
+    form = GradeForm()
+    form.branch.choices = [('', 'Select Branch')] + [
+        (branch.name, branch.name) for branch in SchoolBranch.query.all()
+    ]
+
+    if form.validate_on_submit():
+        entered_streams = list(filter(None, 
+            [form.stream1.data, form.stream2.data, form.stream3.data])
+        )
+
+        if len(set(entered_streams)) != len(entered_streams):
+            flash('You cannot have same name for two streams!', 'danger')
+            return redirect(url_for('admin_bp.grade_streams_setup'))
+
+        selected_branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
+        selected_grade = Grade.query.filter_by(grade_name=form.grade_name.data).first()
+
+        existing_streams = GradeStreamBranch.query.filter_by(
+            branch_id=selected_branch.id,
+            grade_id=selected_grade.id
+        ).all()
+
+        existing_names = [s.stream_name for s in existing_streams]
+
+        # Update or insert streams
+        for stream in entered_streams:
+            if stream not in existing_names:
+                new_entry = GradeStreamBranch(
+                    branch_id=selected_branch.id,
+                    grade_id=selected_grade.id,
+                    stream_name=stream
+                )
+                db.session.add(new_entry)
+            # else: stream already exists, skip or update logic can go here
+
+        db.session.commit()
+
+        flash('Streams added/updated successfully.', 'success')
+        return redirect(url_for('admin_bp.grade_streams_setup'))
+
+    return render_template(
+        'grade_streams_setup.html',
+        form=form,
+        d_active=ACTIVE,
+        title='Grades/Streams setup'
+    )
+
+
+@admin_bp.route('/fetch_streams', methods=['POST'])
+def fetch_streams():
+    data = request.get_json() 
+    stream_names = []
+    try:
+        branch = SchoolBranch.query.filter_by(name=data.get('branch')).first()
+        grade = Grade.query.filter_by(grade_name=data.get('grade')).first()
+        print(branch, grade)
+        if branch and grade:
+            streams = GradeStreamBranch.query.filter_by(
+                branch_id=branch.id, grade_id=grade.id
+            ).all()
+            stream_names = [stream.stream_name for stream in streams]
+            return jsonify({'success': True, 'streams': stream_names})
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash('Sorry an error occured while fetching streams. Please try again.', 'danger')
+        current_app.logger.error(f'Error: {e} \nTraceback: {traceback.format_exc()}')
+
+    return jsonify({'success': False, 'streams': []}), 500
+
+
+# # Endpoint to fetch streams of the selected grade.
 @admin_bp.route('/get_streams', methods = ['GET', 'POST'])
 @login_required
 def get_streams():
@@ -491,7 +879,7 @@ def add_student():
     form = StudentRegistrationForm()
     branches = [(branch.name, branch.name) for branch in SchoolBranch.query.all()]
     branches.insert(0, ("", "Select Branch"))  
-    form.branch.choices = branches 
+    form.branch.choices = branches
     if form.validate_on_submit(): 
         selected_branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
         student = Student(
@@ -521,12 +909,34 @@ def add_student():
             current_app.logger.error(e)
             flash('Something went wrong!', 'danger')
             return redirect(url_for('admin_bp.add_student'))
+        
+    form.branch.data = ""
 
     return render_template(
         'manage_students/add_student.html',
         s_active = ACTIVE,
         form = form
     )
+
+
+@admin_bp.route('/delete_student', methods=['POST'])
+@login_required
+def delete_student():
+    adm_no = request.form.get('adm_no')
+    try:
+        student = Student.query.filter_by(adm_no=adm_no).first()         
+        # Delete all exam marks related to the student
+        ExamMarks.query.filter_by(student_id=student.id).delete()
+        db.session.delete(student)
+
+        db.session.commit()
+        flash('Student was deleted successfully', 'info')
+    except SQLAlchemyError as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        flash('Sorry, can\'t delete student. Please try again later.', 'warning')
+
+    return redirect(url_for('admin_bp.add_student'))
 
 
 @admin_bp.route('/update_student_biodata', methods=['POST'])
@@ -552,14 +962,14 @@ def update_student_biodata():
     # Update student data
     target_student.fullname = request.form.get('fullname')
     target_student.gender = request.form.get('gender')
-    target_student.grade = request.form.get('grade') 
+    target_student.grade = request.form.get('grade')
     target_student.parent_name = request.form.get('parent_name')
     target_student.contact_phone = request.form.get('contact_phone')
     target_student.branch_id = branch.id
 
     target_student.health_info = request.form.get('health_info')
 
-    if stream:
+    if stream and stream != 'None':
         target_student.stream = stream
 
     # Commit to DB
@@ -581,6 +991,7 @@ def update_student_biodata():
         grades = Grade.query.all(),
         s_active=ACTIVE
     ) 
+
 
 # Update the student passport
 @admin_bp.route('/update_student_passport', methods=['POST'])
@@ -610,46 +1021,9 @@ def update_student_passport():
         'manage_students/searched_student.html', 
         form=form,
         student_info=target_student,
+        branches = SchoolBranch.query.all(),
+        grades = Grade.query.all(),
         s_active=ACTIVE
-    )
-
-
-@admin_bp.route('/get_students', methods=['POST', 'GET'])
-@login_required
-def get_students():
-    data = request.json
-    grade = data.get('grade')
-    stream = data.get('stream')
-
-    if stream:
-        students = Student.query.filter_by(grade=grade, stream=stream).all()
-    else:
-        students = Student.query.filter_by(grade=grade).all()
-
-    student_list = [{
-        "adm_no": s.adm_no,
-        "fullname": s.fullname,
-        "grade": s.grade,
-        "stream": s.stream,
-        "gender": s.gender,
-        "parent_name": s.parent_name,
-        "contact_phone": s.contact_phone
-    } for s in students]
-
-    return jsonify(student_list) 
-
-
- 
-
-@admin_bp.route('/display_students_per_grade')
-@login_required
-def display_students_per_grade():
-    students = Student.query.order_by(Student.grade).all()
-    return render_template(
-        'manage_students/display_students_per_grade.html',
-        g_active=ACTIVE,
-        form = SearchStudent(),
-        students = students
     )
 
 
@@ -693,7 +1067,32 @@ def search_student():
                 form = form, 
                 s_active = ACTIVE,
             )
-        
+
+
+@admin_bp.route('/get_students', methods=['POST', 'GET'])
+@login_required
+def get_students():
+    data = request.json
+    grade = data.get('grade')
+    stream = data.get('stream')
+
+    if stream:
+        students = Student.query.filter_by(grade=grade, stream=stream).all()
+    else:
+        students = Student.query.filter_by(grade=grade).all()
+
+    student_list = [{
+        "adm_no": s.adm_no,
+        "fullname": s.fullname,
+        "grade": s.grade,
+        "stream": s.stream,
+        "gender": s.gender,
+        "parent_name": s.parent_name,
+        "contact_phone": s.contact_phone
+    } for s in students]
+
+    return jsonify(student_list)
+
 
 @admin_bp.route('/view_subjects', methods=['GET', 'POST'])
 @login_required
@@ -792,58 +1191,219 @@ def delete_subject():
     return redirect(url_for('admin_bp.add_subject'))
 
  
-@admin_bp.route('/assign_subjects', methods=['POST'])
+@admin_bp.route('/assign_teacher_subjects/<int:teacher_id>', methods=['GET', 'POST'])
 @login_required
-def assign_subjects():
-    data = request.get_json()  # Get JSON data
-    teacher_name = data.get("teacher")  # Get teacher's name
-    subject_info = data.get("subjectInfo")  # Get subjects list
+def assign_teacher_subjects(teacher_id):
+    try:
+        teacher = Teacher.query.get(teacher_id)
+        if not teacher:
+            flash("Teacher not found!", "warning")
+            return redirect(url_for('admin_bp.assign_teacher_roles')) 
+        branch = teacher.branch
+        if not branch:
+            flash("Branch for the teacher not found!", "warning")
+            return redirect(url_for('admin_bp.assign_teacher_roles'))
 
-    # Retrieve the teacher from the database
-    teacher = Teacher.query.filter_by(teacher_name=teacher_name).first()
-    if not teacher:
-        return jsonify({"message": "Teacher not found"}), 404
+        grade_names = [g.grade_name for g in Grade.query.all()]
+ 
+        # Handle subject submission.
+        if request.method == 'POST':
+            grade = request.form.get('grade')
+            stream = request.form.get('stream')
+            subject_ids = request.form.getlist('subjects')  # list of subject IDs
 
-    for item in subject_info:
-        subject_name = item.get("subject")
-        grade = item.get("grade")
-        stream = item.get("streams", None)  
+            selected_grade = Grade.query.filter_by(grade_name=grade).first()
+            if not selected_grade:
+                flash("Invalid grade selected.", "danger")
+                return redirect(request.url)
 
-        # Retrieve subject from the database
-        subject = Subject.query.filter_by(subject=subject_name).first()
-        if not subject:
-            return jsonify({"message": f"Subject '{subject_name}' not found"}), 404
+            grade_id = selected_grade.id
 
-        # Check if the grade has streams in the database
-        grade_has_streams = Stream.query.filter_by(grade_id=Grade.query.filter_by(grade_name=grade).first().id).count() > 0
+            # Determine applicable streams
+            if stream == "All Streams":
+                all_streams = GradeStreamBranch.query.filter_by(branch_id=branch.id, grade_id=grade_id).all()
+                stream_names = [s.stream_name for s in all_streams]
+            else:
+                stream_names = [stream] if stream else []
 
-        # Validation: If grade has streams, a stream must be provided
-        if grade_has_streams and not stream:
-            return jsonify({"message": f"You must select a stream for {grade}!"}), 400
+            if stream:
+                for stream_name in stream_names:
+                    gsb =  GradeStreamBranch.query.filter_by(
+                            branch_id=branch.id,
+                            grade_id=grade_id,
+                            stream_name=stream_name
+                    ).first()
+                    if not gsb:
+                        continue # skip non-exisiting class
 
-        # Check if the subject in the given grade & stream is already assigned to another teacher
-        existing_assignment = TeacherSubjectAssignment.query.filter_by(
-            subject_id=subject.id, grade=grade, stream=stream
-        ).first()
+                    # Add new subject assignments
+                    for subject_id in subject_ids:
+                        # Remove existing assignments for this teacher in this class
+                        TeacherSubjectAssignment.query.filter_by(
+                            teacher_id=teacher.id,
+                            grade_stream_branch_id=gsb.id,
+                            subject_id=subject_id
+                        ).delete()
 
-        if existing_assignment:
-            # If assigned to another teacher, remove the previous assignment
-            if existing_assignment.teacher_id != teacher.id:
-                db.session.delete(existing_assignment)
-            # If assigned to the same teacher, pass.
-            if existing_assignment.teacher_id == teacher.id:
-                db.session.delete(existing_assignment)
+                        # Remove assignment if another teacher has it.
+                        existing_assignment = TeacherSubjectAssignment.query.filter_by(
+                            grade_stream_branch_id=gsb.id,
+                            subject_id=subject_id                    
+                        ).first()
 
-        # Create a new assignment for the current teacher
-        new_assignment = TeacherSubjectAssignment(
-            teacher_id=teacher.id, subject_id=subject.id, grade=grade, stream=stream
+                        if existing_assignment:
+                            db.session.delete(existing_assignment)
+
+                        new_assignment = TeacherSubjectAssignment(
+                            teacher_id=teacher.id,
+                            subject_id=int(subject_id),
+                            grade_stream_branch_id=gsb.id
+                        )
+                        db.session.add(new_assignment)
+
+            # Assign Subjects to a teacher in a grade with no streams
+            if not stream and grade_id:
+                for subject_id in subject_ids:
+                    # Remove other teacher with this subject in the same grade.
+                    existing_assignment = TeacherSubjectAssignment.query.filter_by(
+                        grade=grade_id,
+                        subject_id=subject_id                    
+                    ).first()
+                    if existing_assignment:
+                        db.session.delete(existing_assignment)
+
+                    # Remove existing assignments for this teacher in this class
+                    TeacherSubjectAssignment.query.filter_by(
+                        teacher_id=teacher.id,
+                        grade=grade_id,
+                        subject_id=subject_id
+                    ).delete()
+
+                    new_assignment = TeacherSubjectAssignment(
+                        teacher_id=teacher.id,
+                        subject_id=int(subject_id),
+                        grade=grade_id
+                    )
+                    db.session.add(new_assignment) 
+            
+            db.session.commit()
+            flash("Teacher subject assignments updated successfully.", "success")
+            return redirect(url_for('admin_bp.assign_teacher_subjects', teacher_id=teacher_id))
+                    
+
+        # ========== GET REQUEST: Fetch assigned subjects ==========
+        assigned_subjects = []
+        assignments = TeacherSubjectAssignment.query.filter_by(teacher_id=teacher_id).all()
+        
+        for assign in assignments:
+            gsb = assign.grade_stream_branch
+            if not gsb:
+                grd = Grade.query.filter_by(id=assign.grade).first()
+                assigned_subjects.append({
+                    'subject_name': assign.subject.subject,
+                    'grade_name': grd.grade_name
+                }) 
+            else:           
+                assigned_subjects.append({
+                    'subject_name': assign.subject.subject,
+                    'grade_name': gsb.grade.grade_name,
+                    'stream_name': gsb.stream_name
+                })
+
+        return render_template(
+            'manage_teachers/assign_teacher_subjects.html',
+            t_active=ACTIVE,
+            teacher=teacher,
+            grades=grade_names, 
+            branch_info=branch,
+            assigned_subjects=assigned_subjects[::-1]
         )
-        db.session.add(new_assignment)
 
-    # Commit all changes
-    db.session.commit() 
+    except Exception as e:
+        current_app.logger.error(f"Error assigning subjects to teacher {teacher_id}: {e}")
+        current_app.logger.error(f'\n TRACEBACK: {traceback.format_exc()}')
+        flash("An unexpected error occurred. Please try again later.", "danger")
+        return redirect(url_for('admin_bp.assign_teacher_roles'))
 
-    return jsonify({"message": f"Subjects assigned/updated successfully for {teacher_name}!"})
+
+
+@admin_bp.route('/fetch_subjects_by_grade', methods=['POST'])
+def fetch_subjects_by_grade():
+    data = request.get_json()
+    grade = data.get('grade')
+
+    if not grade:
+        return jsonify({'success': False, 'message': 'Grade not provided'}), 400
+
+    try:
+        subjects = Subject.query.all()
+        filtered_subjects = [
+            {'id': subj.id, 'subject': subj.subject, 'short_form': subj.short_form}
+            for subj in subjects
+            if subj.grades and grade in subj.grades
+        ]
+
+        return jsonify({'success': True, 'subjects': filtered_subjects})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error fetching subjects'}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -867,32 +1427,149 @@ def get_teacher_subjects(teacher_id):
     return jsonify({"teacher": teacher.teacher_name, "subjects": result})
 
 
-@admin_bp.route('/printouts')
+@admin_bp.route('/display_students_list', methods=['GET', 'POST'])
 @login_required
-def printouts():
+def display_students_list():
+    "Display students lists."
+    form = StudentListForm() 
+
+    students = subjects = []
+    branch = stream = grade = None
+
+    try:
+        branches =[('', 'Select Branch')] + [
+            (branch.name, branch.name) for branch in SchoolBranch.query.all()
+        ]
+        form.branch.choices = branches
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        pass
+    
+    # Remove stream validation if grade has no streams.
+    if request.method == 'POST':
+        branch = SchoolBranch.query.filter_by(name=form.branch.data).first()
+        grade = Grade.query.filter_by(grade_name=form.grade.data).first()
+        
+        if branch and grade:
+            streams = GradeStreamBranch.query.filter_by(
+                grade_id=grade.id, branch_id=branch.id
+            ).all()
+
+            if len(streams) == 0:
+                form.stream.validators = ()  # Remove all validators for stream
+
+    if form.validate_on_submit():
+        stream = form.stream.data
+        list_type = form.list_type.data
+    
+        if stream:
+            students = Student.query.filter_by(
+                branch_id=branch.id, 
+                grade=grade.grade_name,
+                stream = stream 
+            ).all()
+        else:
+            students = Student.query.filter_by(
+                branch_id=branch.id, 
+                grade=grade.grade_name
+            ).all()
+        
+        if list_type == 'Mark list':
+            subjects = [
+                sub.short_form for sub in Subject.query.all() \
+                    if grade.grade_name in sub.grades
+            ]
+            
+    # Reset branch select for new selection.
+    form.branch.data = "Select Branch"
+    
+    query_data = {
+        'branch': branch, 
+        'grade': grade, 
+        'stream': stream,
+        'school_addr': SchoolInfo.query.first().address,
+        'list_type': form.list_type.data or None,
+        'sub_info': {
+            'subjects': subjects,
+            'sub_len': len(subjects)
+        }
+    }
+    
+    sorted_students = sorted(students, key=lambda s: int(s.adm_no))
     return render_template(
         'printouts.html',
+        form = form,
+        query_data = query_data,
+        students = sorted_students,
         p_active = ACTIVE
     )
 
 
-@admin_bp.route('/download_marklist', methods=['GET', 'POST'])
-@login_required
-def download_marklist():
-    target_grade_info = {
-       'grade' : request.form.get('hidden-grade'),
-       'stream': request.form.get('hidden-stream')
-    }
-    if target_grade_info['stream']:
-        students = Student.query.filter(
-            and_ (
-                Student.grade == target_grade_info['grade'],
-                Student.stream == target_grade_info['stream']
-            )
-        ).all()
-        print(students)
 
-    return 'This is where the magic happens!'
+@admin_bp.route('/generate_student_pdf_list', methods=['POST'])
+@login_required
+def generate_student_pdf_list():
+    """
+    This works to generate two types of lists depending on the input of the
+    user. => Class list or Mark list.
+    """
+    import ast
+    stream = request.form.get('strm')
+    branch = SchoolBranch.query.filter_by(
+        name=request.form.get('branch')
+    ).first()
+    grade = Grade.query.filter_by(
+        grade_name=request.form.get('grade')
+    ).first()
+
+    
+    list_type = request.form.get('list-type')
+
+    subjects = ast.literal_eval(request.form.get('subjects'))
+    
+    if branch and grade:
+        students = Student.query.filter_by(
+            branch_id=branch.id, 
+            grade=grade.grade_name
+        ).all()
+
+        streams_obj = GradeStreamBranch.query.filter_by(
+            branch_id=branch.id, grade_id=grade.id
+        ).all()
+        if streams_obj:
+            streams = [s.stream_name for s in streams_obj]
+            students = [student for student in students \
+                        if student.stream == stream]          
+        
+        config = {
+            'branch_name': branch.name, 
+            'grade': grade.grade_name,
+            'stream': stream or '',
+            'addr': SchoolInfo.query.first().address
+        }
+
+        sorted_students = sorted(students, key=lambda s: int(s.adm_no))
+        # Instead of saving the PDF to disk, generate it into memory
+        pdf_buffer = io.BytesIO()
+        generate_marklist(
+            sorted_students, 
+            subjects, 
+            list_type, 
+            config=config, 
+            output=pdf_buffer
+        )
+        pdf_buffer.seek(0)
+
+        # Send the PDF back to browser, inline (to view)
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=False,  # <--- This makes it open instead of download
+            download_name=f'{branch.name}_{grade.grade_name}_{list_type}.pdf'
+        )
+
+    return 'Error generating PDF'
 
 
 
@@ -1265,7 +1942,7 @@ def process_report_forms():
 @admin_bp.route('/manage_branch', methods=['GET', 'POST'])
 def manage_branch():
     form = BranchForm()
-    branches = SchoolBranch.query.all()
+    branches = SchoolBranch.query.all()[::-1]
     branch_id = request.form.get("branch_id")
     if branch_id:
         form.branch_id.data = branch_id 

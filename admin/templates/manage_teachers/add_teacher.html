@@ -47,11 +47,11 @@
     {% endif %}
    {% endwith %}
    <div class="d-flex align-items-center bg-white p-2">
-    <hr class="flex-grow-1 bg-success">
-    <h5 class="mx-1 has-text-primary">
-        <i class="fas fa-plus-circle mx-2"></i>New Teacher Info
-    </h5>
-    <hr class="flex-grow-1 bg-success">
+        <hr class="flex-grow-1 bg-success">
+        <h5 class="mx-1 has-text-primary">
+            <i class="fas fa-plus-circle mx-2"></i>New Teacher Info
+        </h5>
+        <hr class="flex-grow-1 bg-success">
    </div>
    <form method="POST" action="{{ url_for('admin_bp.add_teacher') }}">
       {{ form.hidden_tag() }}

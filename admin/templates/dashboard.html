@@ -9,42 +9,40 @@
         <span>Home</span>
       </div>
     </a>
-     <a href="{{ url_for('admin_bp.update_sch_info') }}">
-        <div class="d-flex link__width">
-          <i class="material-icons">apartment</i>
-          <span>Manage Sch Info</span>
-        </div>
-      </a>
-      <a href="{{ url_for('admin_bp.school_setup') }}">
-        <div class="d-flex link__width">
-          <i class="material-icons">settings</i>
-          <span class="">School Settings</span>
-        </div>
-      </a>
+    <a href="{{ url_for('admin_bp.update_sch_info') }}">
+      <div class="d-flex link__width">
+        <i class="material-icons">apartment</i>
+        <span>Manage Sch Info</span>
+      </div>
+    </a>
+    <a href="{{ url_for('admin_bp.grade_streams_setup') }}">
+      <div class="d-flex link__width">
+        <i class="material-icons">settings</i>
+        <span class="">Grade/Stream setup</span>
+      </div>
+    </a>
   </div> 
 {% endblock horizontal_nav %}
 
- {% block main_content %} 
+{% block main_content %} 
   <div class="container-fluid">
     {% include "search_student.html" %}
   </div>
+
   <div class="container">
     <div class="container dis-sm-none"> 
       <div class="info-card mt-3 d-flex">
         <div class="bg-white shadow-sm rounded w-100">
           <div class="user-info d-flex p-2">
             {% if current_user.teacher.passport_filename %}
-            <div class="profile-lg" style="background-image:
-             url('{{ url_for('static', 
-             filename='images/profile-pictures/{0}'.format(current_user.teacher.passport_filename)) }}')"
-             >
-            </div>
+              <div class="profile-lg" style="background-image:
+              url('{{ url_for('static', filename='images/profile-pictures/{0}'.format(current_user.teacher.passport_filename)) }}')">
+              </div>
             {% else %}
-            <div class="profile-lg shadow-sm" style="background-image: url('{{ url_for('static', filename='images/profile-pictures/default.JPG')}}');">
-            </div>
+              <div class="profile-lg shadow-sm" style="background-image: url('{{ url_for('static', filename='images/profile-pictures/default.JPG')}}');">
+              </div>
             {% endif %}
-            <div class="profile-welcome d-flex justify-content-center
-               align-items-center w-50 p-3">
+            <div class="profile-welcome d-flex justify-content-center align-items-center w-50 p-3">
               <p>
                 Welcome <b>{{ current_user.teacher.teacher_name }}.</b> Manage the <b>assessment</b> of
                 your students from the comfort of your <b> phone/computer</b>.<br>
@@ -52,90 +50,300 @@
                   {{ current_user.teacher.role | capitalize() }}
                 </small>
               </p>
-              
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="row">
-     <h3 class="text-center mt-2 fw-light">
-        <i class="bi bi-graph-up"></i> Data across all 4 Branches
-     </h3>
+
+    <div class="row bg-white container border mt-3 pt-3">
+      <h5 class="text-center mt-2 fw-light">
+        <i class="bi bi-graph-up"></i> Data Across All {{ totals['branch_total'] }} Branches
+      </h5>
+
       <div class="col-sm-8">
         <div class="row mt-2">
-          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex 
-            align-items-center p-3 shadow-sm rounded-1">
+          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex align-items-center border
+           p-3 shadow-sm rounded-1">
             <div class="icon">
               <i class="material-icons icon-lg">diversity_3</i>
             </div>
             <div class="card-label mx-5 w-75">
-              <h6 class="text-center fw-bold has-text-primary">No of Students</h6>
-              <h5 class="text-center text-muted">{{ students_count }}</h5>
+              <h6 class="text-center fw-bold has-text-primary">Students</h6>
+              <h5 class="text-center fw-light display-6" id="students-count"> 
+                {{ "{:,}".format(totals['student_total']) }}
+              </h5>
             </div>
             <div class="card-link d-flex justify-content-end w-25">
-              <a href="">
-                <i class="material-icons">arrow_right</i>
-              </a>
+              <a href="{{ url_for('admin_bp.student_dash') }}"><i class="material-icons">arrow_right</i></a>
             </div>
           </div>
-          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex 
-            align-items-center p-3 shadow-sm rounded-1">
+          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex align-items-center p-3 border
+           shadow-sm rounded-1">
             <div class="icon">
               <i class="material-icons icon-lg">cast_for_education</i>
             </div>
             <div class="card-label mx-5 w-75">
-              <h6 class="text-center fw-bold has-text-primary">No of Teachers</h6>
-              <h5 class="text-center text-muted">{{ g.general_info.total_teachers }}</h5>
+              <h6 class="text-center fw-bold has-text-primary">Teachers</h6>
+              <h5 class="text-center fw-light display-6" id="teachers-count">{{ totals['teacher_total'] }}</h5>
             </div>
             <div class="card-link d-flex justify-content-end w-25">
-              <a href="{{ url_for('admin_bp.view_teachers') }}">
-                <i class="material-icons">arrow_right</i>
-              </a>
+              <a href="{{ url_for('admin_bp.view_teachers') }}"><i class="material-icons">arrow_right</i></a>
             </div>
           </div>
         </div>
+
         <div class="row mt-2">
-          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex 
-            align-items-center p-3 shadow-sm rounded-1">
+          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex align-items-center p-3 border
+           shadow-sm rounded-1">
             <div class="icon">
               <i class="material-icons icon-lg">supervised_user_circle</i>
             </div>
             <div class="card-label mx-5 w-75">
-              <h6 class="text-center fw-bold has-text-primary">No of Staff</h6>
-              <h5 class="text-center text-muted">10</h5>
+              <h6 class="text-center fw-bold has-text-primary">Staff</h6>
+              <h5 class="text-center fw-light display-6" id="staff-count">{{ totals['staff_total'] }}</h5>
             </div>
             <div class="card-link d-flex justify-content-end w-25">
-              <a href="">
-                <i class="material-icons">arrow_right</i>
-              </a>
+              <a href="{{ url_for('admin_bp.manage_staff') }}"><i class="material-icons">arrow_right</i></a>
             </div>
           </div>
-          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex 
-            align-items-center p-3 shadow-sm rounded-1">
+          <div class="col-sm-5 bg-white mx-2 mt-2 d-flex align-items-center p-3 border
+           shadow-sm rounded-1">
             <div class="icon">
               <i class="material-icons icon-lg">house</i>
             </div>
             <div class="card-label mx-5 w-75">
-              <h6 class="text-center fw-bold has-text-primary">No of Streams</h6>
-              <h5 class="text-center text-muted">16</h5>
+              <h6 class="text-center fw-bold has-text-primary">Branches</h6>
+              <h5 class="text-center fw-light display-6" id="branches-count">{{ totals['branch_total'] }}</h5>
             </div>
             <div class="card-link d-flex justify-content-end w-25">
-              <a href="">
+              <a href="{{ url_for('admin_bp.manage_branch') }}">
                 <i class="material-icons">arrow_right</i>
               </a>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-sm-3 mt-2">
-        <img src="{{ url_for('static', filename='images/app-images/graph.JPG') }}" 
-          alt="graph-images">
+
+      <div class="col-sm-4 bg-white"> 
+        <div style="display: flex;">
+            <canvas id="populationChart" style="max-width: 500px; max-height: 500px;"></canvas>
+        </div>
       </div>
     </div>
-    <div class="container bg-white p-3 mt-4" style="height: 300px;">
-      <h6 class="mt-3 text-center">Schools Analytics Summary</h6>
-      
-    </div>
+
+    <div class="container p-3 mt-3 mb-2"> 
+      <div class="d-flex align-items-center  p-2">
+        <hr class="flex-grow-1">
+        <h5 class="mx-2 has-text-primary">
+          <i class="bi bi-list"></i> Branches Data Analytics
+        </h5>
+        <hr class="flex-grow-1">
+      </div>
+    </div> 
+
+    {% for branch in branches %}
+      <div class="border rounded shadow-sm mb-4 p-3 bg-white"> 
+        <div class="d-flex align-items-center bg-white p-2">
+            <hr class="flex-grow-1">
+            <h5 class="text-center font-weight-bold">
+                <i class="bi bi-house-fill mx-1"></i>{{ branch.name }}
+            </h5>
+            <hr class="flex-grow-1">
+          </div>
+        <div class="row">
+          <div class="col-md-7">
+            <ul class="list-group list-group-flush"> 
+                <li class="list-group-item fw-bold">
+                    Manager: <span class="mx-3 fw-light">{{ branch.manager }}</span>
+                </li>
+                <li class="list-group-item fw-bold">
+                    {% if branch.level == 'Primary' %}
+                        Headteacher: 
+                        <span class="mx-3 fw-light">{{ branch.head }}</span>
+                    {% elif branch.level =='High School' %}
+                        Principal: 
+                        <span class="mx-3 fw-light">{{ branch.head }}</span>
+                    {% else %}
+                        Principal/Headteacher: 
+                        <span class="mx-3 fw-light">{{ branch.head }}</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item fw-bold">
+                    Level: <span class="mx-3 fw-light">
+                        {% if branch.level == 'Combined' %}
+                            {{ branch.level }}( Primary + Secondary)
+                        {% else %}
+                            {{ branch.level }}
+                        {% endif %} 
+                    </span>
+                </li>
+                <li class="list-group-item fw-bold">
+                    Total Students: <span class="mx-3 fw-light">{{ branch.student_count }}</span>
+                </li>
+                <li class="list-group-item fw-bold">
+                    Total Teachers: <span class="mx-3 fw-light">{{ branch.teacher_count }}</span>
+                </li>
+                <li class="list-group-item fw-bold">
+                    Total Staff: <span class="mx-3 fw-light">{{ branch.staff_count }}</span>
+                </li>
+            </ul>
+          </div>
+          <div class="col-md-5 d-flex justify-content-start align-items-center">
+            <canvas id="genderChart{{ branch.id }}" style="width: 100%; max-width: 300px; height: 200px;"></canvas>
+          </div>                   
+        </div>
+
+        <div class="accordion accordion-flush" id="{{ branch.name }}-{{branch.id}}">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ branch.id }}" aria-expanded="false" aria-controls="{{ branch.id }}">
+                  <span class="fw-bold text-danger">More Stats</span>
+                </button>
+              </h2>
+              <div id="{{ branch.id }}" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#{{ branch.name }}-{{branch.id}}">
+                <div class="accordion-body">
+                    <h5 class="text-center border-bottom pb-2 fw-light">More Branch Data</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>Total Number of students: {{ branch['all_students']|length }}</p>
+                            <div class="border p-2">
+                                <h6 class="text-center">Classes available in {{ branch.name }}</h6>
+                                {% for grade in branch['branch_grades'] %}
+                                    {% if grade in ["Form 4", "Form 3", "Form 2", "Grade 9", "Grade 8", "Grade 7"] %}
+                                        <span class="badge p-2 m-1" style="background-color: red;">{{ grade }}</span>
+                                    {% else %}
+                                        <span class="badge bg-primary p-2 m-1">{{ grade }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>                            
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container mt-3 w-100" style="height: 200px;">
+                                <!-- Student distribution per grade -->
+                                <h6 class="text-center">Student Distribution per Class</h6>
+                                <canvas id="studentChart{{ branch.id }}"></canvas>   
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+    {% endfor %}
   </div>
+
+<div class="line-with-text mt-3">
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+</div>
+
+<script>
+    window.onload = function() {
+  
+      const popCtx = document.getElementById('populationChart').getContext('2d');
+  
+      {% for branch in branches %}  
+      // Gender distribution chart per branch
+      const genderCtx{{ branch.id }} = document.getElementById('genderChart{{ branch.id }}').getContext('2d');
+      
+      new Chart(genderCtx{{ branch.id }}, {
+        type: 'bar',
+        data: {
+          labels: ['Boys', 'Girls'],
+          datasets: [{
+            label: 'Student Population',
+            data: [{{ branch.male_students }}, {{ branch.female_students }}],
+            backgroundColor: ['#36A2EB', '#FF6384'],
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+  
+      // Student distribution per grade chart per branch
+      const studentCtx{{ branch.id }} = document.getElementById('studentChart{{ branch.id }}').getContext('2d');
+      
+      const gradeDistribution{{ branch.id }} = {{ branch.grade_distribution | tojson }};
+      const labels{{ branch.id }} = Object.keys(gradeDistribution{{ branch.id }});
+      const data{{ branch.id }} = Object.values(gradeDistribution{{ branch.id }});
+  
+      new Chart(studentCtx{{ branch.id }}, {
+        type: 'bar',
+        data: {
+          labels: labels{{ branch.id }},
+          datasets: [{
+            label: 'Number of Students',
+            data: data{{ branch.id }},
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+  
+      {% endfor %}
+  
+      // Pie chart for all branches
+      new Chart(popCtx, {
+        type: 'pie',
+        data: {
+          labels: [
+            {% for branch in branches %}'{{ branch.name }}'{% if not loop.last %}, {% endif %}{% endfor %}
+          ],
+          datasets: [{
+            label: 'Total number of students',
+            data: [
+              {% for branch in branches %}
+                {{ branch.student_count }}{% if not loop.last %}, {% endif %}
+              {% endfor %}
+            ],
+            backgroundColor: [
+              {% for branch in branches %}
+                'hsl({{ loop.index0 * (360 // branches|length) }}, 70%, 60%)'{% if not loop.last %}, {% endif %}
+              {% endfor %}
+            ],
+            borderColor: [
+              {% for branch in branches %}
+                'hsl({{ loop.index0 * (360 // branches|length) }}, 70%, 40%)'{% if not loop.last %}, {% endif %}
+              {% endfor %}
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Students Comparison Across Branches'
+            },
+            legend: {
+              display: true,
+              position: 'right',
+              labels: {
+                boxWidth: 20,
+                padding: 15
+              }
+            }
+          }
+        }
+      });
+  
+    }
+  </script>  
+ 
+
 {% endblock main_content %}

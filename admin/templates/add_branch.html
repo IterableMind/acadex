@@ -15,10 +15,10 @@
           <span>Manage Sch Info</span>
         </div>
       </a>
-      <a href="{{ url_for('admin_bp.school_setup') }}">
+      <a href="{{ url_for('admin_bp.grade_streams_setup') }}">
         <div class="d-flex link__width">
           <i class="material-icons">settings</i>
-          <span class="">School Settings</span>
+          <span class="">Grade/Stream setup</span>
         </div>
       </a>
   </div> 
@@ -49,7 +49,7 @@
     <div class="row">
         <div class="col-lg-8 bg-light table-responsive">
             <h5 class="text-center">Branches</h5>
-            <table class="table table-bordered small">
+            <table class="table table-bordered table-hover small">
                 <caption><h6>Total Branches: {{ branches|length }}</h6></caption>
                 <thead>
                     <tr>
@@ -69,11 +69,11 @@
                                 <td>{{ branch.branch_head }}</td>
                                 <td>{{ branch.branch_manager }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning btn-edit" data-id="{{ branch.id }}">
+                                    <button class="btn btn-sm btn-warning btn-edit fw-bold" data-id="{{ branch.id }}">
                                         <i class="bi bi-pencil"></i> Edit
                                      </button>
                                      
-                                    <button class="btn btn-sm btn-danger">
+                                    <button class="btn btn-sm btn-danger fw-bold">
                                        <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </td>
@@ -90,8 +90,7 @@
                 <i class="bi bi-plus"></i> Add/Edit Branch Info
             </h5>
             <form action="" method="post" id="branch-form">
-                {{ form.hidden_tag() }} 
-                <!-- <input type="text" id="branch_id" name="branch_id"> -->
+                {{ form.hidden_tag() }}  
                 {{ form.branch_id(type="hidden", id="branch_id") }}
                 <div class="field">
                     <label for="name" class="label">

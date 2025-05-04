@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
-from ..models import Teacher, Student
+from ..models import Teacher, Student, Staff, SchoolBranch, Grade
+from wtforms_sqlalchemy.fields import QuerySelectField
 from wtforms import (
     StringField, 
     TextAreaField, 
@@ -13,8 +14,8 @@ from wtforms import (
     EmailField,
     FileField,
     DateField,
-    BooleanField
-
+    BooleanField,
+    HiddenField
 )
 from wtforms.validators import (
     DataRequired, 
@@ -256,6 +257,13 @@ class GradeForm(FlaskForm):
         [(f'Form {i}', f'Form {i}') for i in range(2, 5)],
         validators=[DataRequired(message='Please select a grade.')]
     )
+    branch = SelectField(
+        'Branch',
+        validators=[
+            DataRequired(message='Please select a branch with muiltaple streams.')
+        ],
+        choices=[]
+    )
     stream1 = StringField(
         'Stream 1',
          render_kw={"placeholder": "Enter stream 1 name"}
@@ -478,7 +486,8 @@ class BranchForm(FlaskForm):
         choices=[
             ('', 'Select Level'),
             ('Primary', 'Primary'),
-            ('High School', 'High School')
+            ('High School', 'High School'),
+            ('Combined', 'Combined')
         ],
         validators=[DataRequired(message="Please select school level.")]
     )
@@ -487,3 +496,128 @@ class BranchForm(FlaskForm):
         validators=[DataRequired(message="Provide headteacher/principal's name.")]
     )
     branch_id = StringField('branch_id')
+
+class StaffForm(FlaskForm):
+    fullname = StringField('Full Name', validators=[
+        DataRequired(message='Enter the staff\'s fullname.'), 
+        Length(max=100)
+        ]
+    )
+    branch = SelectField('Branch', validators=[
+        DataRequired(message='You must select the branch name.')
+        ], 
+        choices=[]
+    )   
+    designation = StringField('Designation', validators=[
+        DataRequired(message='Please enter the designation of the staff.'), 
+        Length(max=50)
+        ]
+    ) 
+    phone_number = StringField('Phone Number', validators=[
+        DataRequired(message='You must provide phone number.'),
+        Regexp(r'^(07|01)\d{8}$', message='Enter a valid phone number.')
+    ])
+    
+    submit = SubmitField('Submit')
+
+    def validate_phone_number(self, field):
+        if field.data:
+            staff = Staff.query.filter_by(phone_number=field.data).first()
+            if staff:
+                raise ValidationError('There is a staff with this phone number already.')
+
+    def validate_fullname(self, field):
+        if field.data:
+            staff = Staff.query.filter_by(fullname=field.data).first()
+            if staff:
+                raise ValidationError('There is a staff with that name already.')    
+
+class StudentListForm(FlaskForm):
+    branch = SelectField(
+        'Branch',
+        validators=(
+            [DataRequired(message='You must select a branch to continue.')]
+         ),
+        choices=[]
+    )
+    grade = SelectField (
+        'Grade',
+        validators=(
+            [DataRequired(message='You must select a grade to continue.')]
+         ),
+        choices=[('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)] + \
+        [(f'Form {i}', f'Form {i}') for i in range(2, 5)]
+    )
+
+    stream = StringField(
+        'Streams',
+         validators=(
+            [DataRequired(message='You didn\'t select a stream for the selected grade/form.')]
+         )
+    )
+    
+    list_type = SelectField(
+        'List Type',
+        validators=(
+            [DataRequired(message='Please select the list type.')]
+         ),
+        choices=[
+            ('', 'Select list type'),
+            ('Class list', 'Class list'),
+            ('Mark list', 'Mark list')
+        ]
+    )
+
+  
+
+# Helper function for branches
+def branch_choices():
+    return SchoolBranch.query.all()
+
+def grade_choices():
+    return Grade.query.all()
+
+class AssignTeacherRoleForm(FlaskForm):
+    role = SelectField(
+        'Teacher Role',
+        choices=[
+            ('', 'Select Role'),
+            ('teacher', 'Teacher'),
+            ('principal', 'Principal'), 
+            ('deputy principal', 'Deputy Principal'),
+            ('headteacher', 'Headteacher'),
+            ('deputy headteacher', 'Deputy Headteacher'),
+            ('classteacher', 'Class Teacher'),
+            ('senior teacher', 'Senior Teacher')
+        ],
+        # default='teacher',
+        validators=[DataRequired()]
+    )
+
+    is_center_manager = BooleanField('Assign as Center Manager?')
+
+    center_branch = QuerySelectField(
+        'Center Manager Branch',
+        query_factory=branch_choices,
+        allow_blank=True,
+        get_label='name'
+    )
+
+    grade = SelectField(
+        'Select Grade/Form to assign classteacher Responsibility',
+        choices = [('', 'Select Grade')] + [(f'Grade {i}', f'Grade {i}') for i in range(1, 10)] + \
+        [(f'Form {i}', f'Form {i}') for i in range(2, 5)]
+    )
+
+    submit = SubmitField('Assign Role')
+
+    def validate_center_branch(form, field):
+        if form.is_center_manager.data and not field.data:
+            raise ValidationError('Please select a center manager branch.')
+    
+    def validate_grade(form, field):
+        if form.role.data == 'classteacher' and not field.data:
+            raise ValidationError('Please select a Grade/Form.')
+        
+
+# Afande Denno

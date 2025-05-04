@@ -10,14 +10,8 @@
       <span class="nav-label">Dashboard</span>
     </a>
   </li>
-  <li>
-    <a href="#" class="text-white text-decoration-none">
-      <i class="material-icons">calendar_month</i>
-      <span class="nav-label">Calendar</span>
-    </a>
-  </li>
   <li class="{{ sub_active }}">
-    <a href="{{ url_for('admin_bp.view_subjects') }}" 
+    <a href="{{ url_for('admin_bp.add_subject') }}" 
      class="text-white text-decoration-none">
       <i class="material-icons">book</i>
       <span class="nav-label">Subjects</span>
@@ -37,11 +31,11 @@
       <span class="nav-label">Teachers</span>
     </a>
   </li>
-  <li class="{{ g_active }}">
-    <a href="{{ url_for('admin_bp.display_students_per_grade') }}" 
-     class="text-white text-decoration-none">
-      <i class="material-icons">home</i>
-      <span class="nav-label">Grades</span>
+  <li class="{{ st_active }}">
+    <a href="{{ url_for('admin_bp.manage_staff') }}" 
+      class="text-white text-decoration-none">
+      <i class="material-icons">people</i>
+      <span class="nav-label">Staff</span>
     </a>
   </li>
   <li class="{{ b_active }}">
@@ -65,12 +59,13 @@
   </li>
   <hr>
   <li class="{{ p_active }}">
-    <a href="{{ url_for('admin_bp.printouts') }}" class="text-white text-decoration-none">
+    <a href="{{ url_for('admin_bp.display_students_list') }}"
+     class="text-white text-decoration-none">
       <i class="material-icons">print</i>
       <span class="nav-label">Printouts</span>
     </a>
   </li>
-  <li class="mt-4">
+  <li style="margin-top: 60px;">
     <a href="{{ url_for('admin_bp.logout') }}" 
       class="text-white text-decoration-none">
       <i class="material-icons">logout</i>

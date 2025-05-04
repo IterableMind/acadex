@@ -1,0 +1,177 @@
+{% extends "manage_teachers/layout.html" %}
+
+{% block horizontal_nav %} 
+   <!-- Teacher management utilities -->
+   <div class="container d-flex links align-items-center">
+      <a href="{{ url_for('admin_bp.view_teachers') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">visibility</i>
+            <span class="">View teachers</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.add_teacher') }}">
+         <div class="d-flex link__width">
+            <i class="material-icons">person_add</i>
+            <span>Add teacher</span>
+         </div>
+      </a>
+      <a href="#">
+         <div class="d-flex link__width sub--link--active">
+            <i class="material-icons">assignment_ind</i>
+            <span class="">Manage Teachers</span>
+         </div>
+      </a>
+      <a href="{{ url_for('admin_bp.update_profile') }}">
+        <div class="d-flex link__width">
+           <i class="material-icons">security_update_good</i>
+           <span class="">Update profile</span>
+        </div>
+     </a>
+   </div> 
+{% endblock horizontal_nav %}
+
+<!-- Main content area -->
+{% block main_content %}
+<div class="shadow-sm container bg-white p-3">
+   <!-- Flashed Messages -->
+   {% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+     <div class="alert-container">
+       {% for category, message in messages %}
+         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+           {{ message }}
+           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+         </div>
+       {% endfor %}
+     </div>
+    {% endif %}
+   {% endwith %}
+   <!-- teachers role content here -->
+   <h5 class="text-center fw-bold border-bottom pb-2 has-text-primary">
+      Assign {{ teacher.teacher_name }} Admin Role(s)
+      <span id="branch-holder" data-branch-name="{{ branch_name }}"></span>
+    </h5>
+
+    <div class="container bg-white p-3">
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            
+            <div class="row mb-1">
+                <div class="col-md-6">
+                    <b>{{ form.role.label(class="form-label") }}</b>
+                    {{ form.role(id="teacher-role", class="form-select" + (' is-invalid' if form.role.errors else '')) }}
+                    
+                    {% for error in form.role.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6 d-flex align-items-center">
+                    <div class="form-check mt-4">
+                        {{ form.is_center_manager(class="form-check-input", id="is_center_manager") }}
+                        <label class="form-check-label" for="is_center_manager">
+                            {{ form.is_center_manager.label.text }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="row mb-2 mt-2"> 
+                <div class="col-md-6 d-none" id="class-teacher-grade">
+                    <b>{{ form.grade.label(class="form-label") }}
+                        <span class="text-danger"> *</span>
+                    </b>
+                    {{ form.grade(id="grade-select", class="form-select" + (' is-invalid' if form.grade.errors else '')) }}
+                    
+                    {% for error in form.grade.errors %}
+                        <div class="invalid-feedback" id="grade-error">{{ error }}</div>
+                    {% endfor %}
+                    <div class="d-none mt-2" id="stream-select-div">
+                        <label for="stream-select" class="form-label fw-bold">Select Stream
+                            <span class="text-danger"> *</span>
+                        </label>
+                        <select id="stream-select" name="stream" class="form-select">
+                            <option value="">Select a stream</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 d-none" id="center_branch_group">
+                    <b>{{ form.center_branch.label(class="form-label") }}
+                        <span class="text-danger"> *</span>
+                    </b>
+                    {{ form.center_branch(class="form-select" + (' is-invalid' if form.center_branch.errors else '')) }}
+                    
+                    {% for error in form.center_branch.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>            
+    
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin_bp.assign_teacher_roles') }}">
+                    <button type="button" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </button>
+                </a>
+                {{ form.submit(class="btn btn-sm btn-secondary") }}
+            </div>
+        </form>
+    </div>
+</div>
+<div class="container bg-white mt-3 p-3">
+    {% if previous_assigned_roles and previous_assigned_roles != 'Teacher' %}
+    <div class="table-responsive">
+        <table class="table table-bordered mt-2">
+            <thead>
+                <tr> 
+                    <th class="border">Roles and Responsibilities</th>
+                    {% if previous_assigned_roles['role'] == 'classteacher' %}
+                        <th class="border">Class/Form</th>
+                        {% if previous_assigned_roles['stream'] %}
+                            <th class="border">Stream</th>
+                        {% endif %}
+                    {% endif %}
+                    {% if previous_assigned_roles['role'] in ['headteacher', 'principal'] %}
+                        <th class="border">Heading Branch</th>
+                    {% endif %}
+                    {% if previous_assigned_roles['center_branch'] %}
+                        <th class="border">Center Manager Branch</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr> 
+                    <td>{{ previous_assigned_roles['role']|title }}</td>
+                    {% if previous_assigned_roles['role'] == 'classteacher' %}
+                        <th>{{ previous_assigned_roles['grade'] }}</th>
+                        {% if previous_assigned_roles['stream'] %}
+                            <th>{{ previous_assigned_roles['stream'] }}</th>
+                        {% endif %}
+                    {% endif %}
+        
+                    {% if previous_assigned_roles['role'] in ['headteacher', 'principal'] %}
+                        <td>{{ branch_name }}</td>
+                    {% endif %}
+
+                    {% if previous_assigned_roles['center_branch'] %}
+                        <td>{{ previous_assigned_roles['center_branch'] }}</td>
+                    {% endif %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <h5 class="text-center text-danger">
+            No Adminstrative roles assigned to {{ teacher.teacher_name }} yet!
+        </h5>
+    {% endif %}
+</div>
+<div class="container-fluid">
+    <div class="line-with-text mt-5">
+        <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+    </div>
+</div>
+<script>
+    const STREAM_URL = "{{ url_for('admin_bp.fetch_streams') }}";
+</script>
+<script src="{{ url_for('admin_bp.static', filename='js/teacher_roles.js') }}"></script>
+{% endblock main_content %}

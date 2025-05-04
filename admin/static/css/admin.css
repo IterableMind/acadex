@@ -81,6 +81,18 @@
   margin-left: 10px;
 }
 
+.fixed-table-container {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  
+.fixed-table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: #fffcfc; /* Adjust as needed */
+    z-index: 1; 
+}
+
 .links {
   display: flex;
   height: 50px;

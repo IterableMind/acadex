@@ -1,12 +1,12 @@
 {% extends "manage_teachers/layout.html" %}
 
-{% block horizontal_nav %} 
+{% block horizontal_nav %}
    <!-- Students management utilities -->
    <div class="container d-flex links align-items-center">
       <a href="{{ url_for('admin_bp.student_dash') }}">
         <div class="d-flex link__width">
-            <i class="material-icons">house</i>
-            <span class="">Home</span>
+            <i class="material-icons">dashboard</i>
+            <span class="">Student Dash</span>
         </div>
       </a>
       <a href="{{ url_for('admin_bp.add_student') }}">
@@ -43,7 +43,7 @@
         <hr class="flex-grow-1">
     </div>
     <h6 class="fw-light">[Personal Information]</h6>
-    <form method="POST" enctype="multipart/form-data" novalidate>
+    <form method="POST" enctype="multipart/form-data">
       {{ form.hidden_tag() }}
 
       <div class="row g-3"> 
@@ -57,7 +57,7 @@
           </div>
           <div class="col-lg-6">
             <b>{{ form.gender.label }}<span class="text-danger"> *</span></b>  
-            {{ form.gender(id="gender", class="input is-primary" + 
+            {{ form.gender(id="gender", class="form-select is-primary" + 
             (' is-danger' if form.gender.errors else '')) }}
             {% for error in form.gender.errors %}
               <small class="text-danger">{{ error }}</small>
@@ -75,31 +75,31 @@
             <b>{{ form.photo.label }}</b>
             {{ form.photo(class="form-control") }}
           </div>
+          
           <div class="col-lg-6">
-           <!-- info here -->
-          </div> 
-          <div class="col-lg-6"></div> 
-          <div class="col-lg-6">
-            <b>{{ form.grade.label }}<span class="text-danger"> *</span></b>  
-            {{ form.grade(id="grade", class="input is-primary" + 
-              (' is-danger' if form.grade.errors else '')) }}
-              {% for error in form.grade.errors %}
-                <small class="text-danger">{{ error }}</small>
+             <b>{{ form.branch.label }}<span class="text-danger"> *</span></b>  
+             {{ form.branch(id="branch", class="form-select is-primary" + 
+                (' is-danger' if form.branch.errors else '')) }}
+                {% for error in form.branch.errors %}
+                    <small class="text-danger">{{ error }}</small>
               {% endfor %}
           </div> 
-          <div class="col-lg-6" style="display: none; width: 20%;" id="stream-fields">
-            <b>{{ form.stream.label }}</b>   
-            <select id="dynamicSelect" class="form-select" name="streams"></select>
-          </div> 
-          <div class="col-lg-6">
-            <b>{{ form.branch.label }}<span class="text-danger"> *</span></b>  
-            {{ form.branch(id="branch", class="input is-primary" + 
-              (' is-danger' if form.branch.errors else '')) }}
-              {% for error in form.branch.errors %}
-                <small class="text-danger">{{ error }}</small>
-              {% endfor %}
+
+          <div class="col-lg-6 d-flex">
+            <div class="form-group w-50" style="display: none;" id="grade-field">
+                <b>{{ form.grade.label }}<span class="text-danger"> *</span></b>  
+                {{ form.grade(id="grade", class="form-select is-primary" + 
+                (' is-danger' if form.grade.errors else '')) }}
+                {% for error in form.grade.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            <div class="mx-2 w-50" style="display: none;" id="stream-fields">
+                <b>{{ form.stream.label }}</b>   
+                <select id="dynamicSelect" class="form-select" name="streams"></select>
+            </div>
           </div>
-          <hr style="color: white">
+
           <h6 class="fw-light">[Parent Information]</h6> 
           <div class="col-lg-6">
             <b>{{ form.parent_name.label }}<span class="text-danger"> *</span></b>  
@@ -122,19 +122,80 @@
             {{ form.health_info(class="form-control") }}
           </div>
       </div>
-      <div class="mt-4">
-        {{ form.submit(class="btn btn-success w-100") }}
+      <div class="mt-4 d-flex justify-content-end">
+        {{ form.submit(class="btn btn-success") }}
       </div>
   </form>
   </div>
 
-<div class="line-with-text mt-5">
-   <small class="text-muted">Bushra &copy;2025 Developed by Oyaro Jared</small>
-</div>
-<script src="{{ url_for('admin_bp.static', filename='js/streams.js') }}"></script>
-<script>
-  url = "{{ url_for('admin_bp.get_streams') }}";
-  getStreams(url)
-</script>
-{% endblock main_content %}
+  <div class="line-with-text mt-5">
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+  </div>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const branchField = document.getElementById("branch");
+      const gradeField = document.getElementById("grade-field");
+      const streamField = document.getElementById("stream-fields");
+  
+      // Show grade field when branch is selected
+      branchField.addEventListener("change", function() {
+        document.getElementById('grade').selectedIndex = 0;
+        streamField.style.display = "none";
+        if (branchField.value !== "") {
+          gradeField.style.display = "block";
+        } else {
+          gradeField.style.display = "none";
+          streamField.style.display = "none";  // Hide stream selection when branch is not selected
+        }
+      });
+  
+      // Fetch streams when grade is selected
+      document.getElementById("grade").addEventListener("change", function() {
+        const grade = this.value;
+        const branch = branchField.value;
+
+        if (grade && branch) {
+            fetch('{{ url_for("admin_bp.fetch_streams") }}', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ grade: grade, branch: branch })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.streams.length > 0) {
+                    streamField.style.display = "block";
+                    const streamSelect = document.getElementById("dynamicSelect");
+                    streamSelect.innerHTML = '';
+
+                    // Add default option
+                    const defaultOption = document.createElement("option"); 
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Select stream";
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    streamSelect.appendChild(defaultOption);
+
+                    data.streams.forEach(stream => {
+                    const option = document.createElement("option");
+                    option.value = stream;
+                    option.textContent = stream;
+                    streamSelect.appendChild(option);
+                    });
+                } else {
+                    streamField.style.display = "none";
+                }
+                });
+            } else {
+            streamField.style.display = "none";
+            }  
+      });
+
+      
+    });
+  </script>
+  
+
+{% endblock main_content %}

@@ -18,7 +18,7 @@
       <a href="#">
         <div class="d-flex link__width sub--link--active">
           <i class="material-icons">settings</i>
-          <span class="">School Settings</span>
+          <span class="">Grade/Stream setup</span>
         </div>
       </a>
   </div> 
@@ -48,7 +48,7 @@
         </h6>
       </div>
       <!-- Grade and Streams form -->
-       <form action="" method="post">
+       <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <div class="form-group mt-3">
           {{ form.grade_name(class="form-select", id="grade-select") }}
@@ -64,6 +64,14 @@
         </div>
         <div class="streams mt-3 border pt-3 px-4 pb-4" style="display: none;">
           <h5 class="text-center fw-light">Stream Identfiers</h5>
+          <div class="mb-2">
+            <b>{{ form.branch.label }}</b>
+            {{ form.branch(class="form-select is-primary" + 
+            (' is-danger' if form.branch.errors else '')) }}
+            {% for error in form.branch.errors %}
+                    <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+          </div>
           <div class="row">
             <div class="col-6">
               {{ form.stream1.label(class="fw-bold small") }}
@@ -92,7 +100,7 @@
       <!-- End form -->
   </div>
   <div class="line-with-text mt-5">
-    <small class="text-muted">Bushra &copy;2025 Developed by Oyaro Jared</small>
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
   </div>
   <script src="{{ url_for('admin_bp.static', filename='js/grades.js') }}"></script>
 {% endblock main_content %}

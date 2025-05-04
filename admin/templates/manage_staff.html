@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+<!-- Horizontal navigation -->
+{% block horizontal_nav %} 
+  <div class="container d-flex links align-items-center">
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+      <div class="d-flex link__width">
+        <i class="material-icons">home</i>
+        <span>Home</span>
+      </div>
+    </a>
+     <a href="{{ url_for('admin_bp.update_sch_info') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">apartment</i>
+          <span>Manage Sch Info</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin_bp.grade_streams_setup') }}">
+        <div class="d-flex link__width">
+          <i class="material-icons">settings</i>
+          <span class="">Grade/Stream setup</span>
+        </div>
+      </a>
+  </div> 
+{% endblock horizontal_nav %}
+
+{% block main_content %} 
+<div class="d-flex align-items-center bg-white p-2">
+    <hr class="flex-grow-1">
+    <h5 class="mx-2 has-text-primary">
+        <i class="bi bi-people-fill"></i> Manage School Staff
+    </h5>
+    <hr class="flex-grow-1">
+</div>
+<div class="container mt-1">
+    <!-- Flashed Messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="alert-container">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+     {% endif %}
+    {% endwith %}
+</div>
+<div class="container bg-white">
+    <div class="row p-3">
+        <div class="col-lg-3 p-3 border shadow-sm">
+            <h4 class="text-center fw-light">Add Staff member</h4>
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+        
+                <div>
+                    {{ form.fullname.label(class="form-label fw-bold") }}
+                    {{ form.fullname(id="fullname", placeholder="Enter Fullname", class="input is-primary" + 
+                    (' is-danger' if form.fullname.errors else '')) }}
+                    {% for error in form.fullname.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+        
+                <div>
+                    {{ form.branch.label(class="form-label fw-bold") }}
+                    {{ form.branch(id="branch", class="input is-primary" + 
+                    (' is-danger' if form.branch.errors else '')) }}
+                    {% for error in form.branch.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+        
+                <div>
+                    {{ form.designation.label(class="form-label fw-bold") }}
+                    {{ form.designation(id="designation", placeholder="Enter designation", class="input is-primary" + 
+                    (' is-danger' if form.designation.errors else '')) }}
+                    {% for error in form.designation.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+        
+                <div>
+                    {{ form.phone_number.label(class="form-label fw-bold") }}
+                    {{ form.phone_number(id="phone_number", placeholder="07...", class="input is-primary" + 
+                    (' is-danger' if form.phone_number.errors else '')) }}
+                    {% for error in form.phone_number.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+        
+                <div class="text-center mt-2">
+                    <button type="submit" class="btn btn-secondary w-100">Save Staff</button>
+                </div>
+            </form>
+        </div>        
+        <div class="col-lg-9 table-responsive">
+            {% if all_staff %}
+                <div class="d-flex justify-content-end p-3">
+                    <button class="btn btn-sm btn-success mx-2">
+                        <i class="bi bi-printer"></i> Print List
+                    </button>
+                    <button class="btn btn-sm btn-danger">
+                        <i class="bi bi-download"></i> Download PDF
+                    </button>
+                </div>
+                <div class="table-responsive fixed-table-container shadow-sm px-2 border bg-white">
+                    <table class="table table-hover fw-light">
+                      <thead class="text-center fw-bold">
+                        <tr>
+                          <th colspan="6">Non Teaching Staff Members</th>
+                        </tr>
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>Phone</th>
+                          <th>Branch</th>
+                          <th>Designation</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for staff in all_staff %}
+                          <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="staff-name">{{ staff.fullname }}</td>
+                            <td class="phone">{{ staff.phone_number }}</td>
+                            <td class="branch">{{ staff.branch.name }}</td>
+                            <td class="designation">{{ staff.designation }}</td>
+                            <td class="d-flex"> 
+                              <button class="btn btn-warning btn-sm edit-btn" data-bs-toggle="modal" data-bs-target="#editStudentModal">
+                                <i class="material-icons">edit</i> Edit
+                            </button>
+                              <button class="btn btn-sm btn-danger mx-2 del-btn" data-bs-toggle="modal" data-bs-target="#deleteModel">
+                                <i class="fa fa-trash"></i> Delete
+                              </button>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>                  
+            {% else %}
+                <h5 class="text-center text-danger">
+                    <i class="bi bi-exclamation-triangle mx-2"></i>No staff members to show yet!
+                </h5>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Warning Modal -->
+<div class="modal fade" id="deleteModel" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark pt-2 pb-2">
+          <h5 class="modal-title" id="warningModalLabel">
+             <i class="fa fa-warning"></i> Attention!
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{{ url_for('admin_bp.delete_staff') }}" method="post">
+             <input type="hidden"  name="staff-name" id="staff-name">
+              <h6 class="fw-bold text-danger text-center">
+                Delete <span id="name"></span> from the system?
+              </h6>
+              <div class="mt-2 d-flex justify-content-end border-top mt-2 pt-2">
+                <button type="button" class="btn btn-secondary" 
+                 data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger mx-2">
+                 <i class="fa fa-trash"></i> Delete</button>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Staff info Modal -->
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true" style="border-radius: 0% !important;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <form method="post" action="{{ url_for('admin_bp.update_staff_info') }}">
+          <div class="modal-header bg-warning text-white pt-2 pb-2 px-4">
+            <h5 class="modal-title fw-bold" id="editStudentModalLabel">
+                <i class="bi bi-pencil"></i> Edit Staff Information
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+  
+          <div class="modal-body px-5"> 
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input type="hidden" name="hidden-staff-name">
+                <label for="staffname" class="form-label fw-bold">Full Name</label>
+                <input type="text" name="staffname" id="fullname" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label for="phone-number" class="form-label fw-bold">Phone</label>
+                <input type="text" name="phone-number" class="form-control" value="">
+              </div>
+
+              <div class="col-md-6">
+                <label for="staff-branch" class="form-label fw-bold">Branch</label>
+                {% if branches %}
+                    <select class="form-select" name="staff-branch" required>
+                        <option value="" disabled selected>Select Branch</option>
+                        {% for branch in branches %}
+                            <option value="{{ branch.name }}">{{ branch.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+              </div>
+  
+              <div class="col-md-6">
+                <label for="staff-design" class="form-label fw-bold">Designation/Work</label>
+                <input name="staff-design" class="form-control">
+              </div>
+            </div>
+          </div>
+  
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-send"></i> Save Changes
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-arrow-clockwise"></i> Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>  
+<div class="line-with-text mt-5">
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const DELETE_BUTTONS = document.querySelectorAll('.del-btn');
+        DELETE_BUTTONS.forEach(button => {
+            button.addEventListener('click', function () {
+                let staffName = this.closest('tr').querySelector(
+                    '.staff-name').textContent.trim(); 
+                document.getElementById('name').textContent = staffName;
+                document.getElementById('staff-name').value = staffName;
+            });
+        });
+
+        
+        // Handle edit button click event.
+        const EDIT_BUTTONS = document.querySelectorAll('.edit-btn');
+        EDIT_BUTTONS.forEach(button => {
+            button.addEventListener('click', function () {
+                staffName = this.closest('tr').querySelector('.staff-name').textContent.trim();
+                document.querySelector('input[name="staffname"]').value = staffName
+                document.querySelector('input[name="phone-number"]').value = this.closest('tr').querySelector('.phone').textContent.trim();
+                document.querySelector('input[name="staff-design"]').value = this.closest('tr'). querySelector('.designation').textContent.trim();  
+                document.querySelector('input[name="hidden-staff-name"]').value =  staffName;
+            });
+        });
+    }) 
+</script>
+{% endblock main_content %}

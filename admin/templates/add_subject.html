@@ -13,22 +13,24 @@
     <form action="" method="post" novalidate>
         <div class="row">
             <div class="col-md-4 col-12 mb-3">
-                <b>{{ form.subject.label }}</b>
-                {{ form.subject(class="input is-primary" + 
-                  (' is-danger' if form.subject.errors else '')) }}
-                  {% for error in form.subject.errors %}
-                    <small class="text-danger">{{ error }}</small>
-                  {% endfor %}
-            </div>
-            <div class="col-md-4 col-12 mb-3">
-                <b>{{ form.sub_short_form.label }}</b>
-                {{ form.sub_short_form(class="input is-primary" + 
-                  (' is-danger' if form.sub_short_form.errors else '')) }}
-                  {% for error in form.sub_short_form.errors %}
-                    <small class="text-danger">{{ error }}</small>
-                  {% endfor %}
-            </div>
-            <div class="col-md-4 col-12 mb-3 border p-1">
+                <div>
+                    <b>{{ form.subject.label }}</b>
+                    {{ form.subject(class="input is-primary" + 
+                    (' is-danger' if form.subject.errors else '')) }}
+                    {% for error in form.subject.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                <div class="mt-1">
+                    <b>{{ form.sub_short_form.label }}</b>
+                    {{ form.sub_short_form(class="input is-primary" + 
+                    (' is-danger' if form.sub_short_form.errors else '')) }}
+                    {% for error in form.sub_short_form.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+            </div> 
+            <div class="col-md-8 col-12 mb-3 border p-1">
                 <div class="w-100 px-2">
                   <p class="text-center fw-bold">Select applicable classes/forms:</p>
                   <div class="d-flex flex-wrap gap-2">

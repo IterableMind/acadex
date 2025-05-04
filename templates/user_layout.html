@@ -26,8 +26,12 @@
         <span class="fw-bold has-text-primary company-title">BUSHRA&trade;</span>
       </div>
       <h5 class="mx-5 fw-bold-5 has-text-primary school-name">
-        {{ g.general_info.school_name }} <br>
-        <small class="mx-5" style="font-size: 1rem;" id="date-display"></small>
+        {{ g.general_info.school_name }}&trade; <br>
+        <small class="mx-5">{{ g.general_info.address }}
+            (<span class="" style="font-size: 1rem;" id="date-display"></span>)
+        </small>
+        
+        
       </h5>
     </div>
     <div>
@@ -70,5 +74,6 @@
     }
     document.getElementById('date-display').innerText = formatDate();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

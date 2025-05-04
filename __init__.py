@@ -52,7 +52,7 @@ def create_app():
     if school_info: 
         g.general_info = {
             'school_name': name,
-            'total_teachers': 12
+            'address': SchoolInfo.query.first().address
         }
     else:
       g.general_info = {}

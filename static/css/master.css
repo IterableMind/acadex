@@ -22,6 +22,20 @@
   font-style: normal;
 }
 
+/* Line with text styling */
+.line-with-text {
+    display: flex;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .line-with-text::before,
+  .line-with-text::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #c5c5c5;
+  }
+
 .input-form {
   max-width: 400px;
   width: 100%;

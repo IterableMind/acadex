@@ -35,14 +35,18 @@ class Teacher(db.Model):
     
     email = db.Column(db.String(100), unique=True, nullable=True)   
     gender = db.Column(db.Enum('male', 'female', name='gender_enum'), nullable=False)
-    role = db.Column(db.String(20), default='teacher')
     passport_filename = db.Column(db.String(255), nullable=True)
     salary = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
 
+    # One-to-many relationship with Roles
+    role_record = db.relationship('Role', backref='teacher', uselist=False)
+
+
     def __repr__(self):
         return f"<Teacher {self.teacher_name} - ID: {self.id}>"
+
 
 
 class User(db.Model, UserMixin):
@@ -64,6 +68,24 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class Student(db.Model):
+    __tablename__ = 'students'
+    
+    id = db.Column(db.Integer, primary_key=True)   
+    fullname = db.Column(db.String(50), nullable=False)   
+    grade = db.Column(db.String(10), nullable=False)    
+    photo = db.Column(db.String(255), nullable=True)   
+    adm_no = db.Column(db.String(20), unique=True, nullable=False)      
+    gender = db.Column(db.String(10), nullable=False)  
+    stream = db.Column(db.String(50), nullable=True)   
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=True)
+    branch = db.relationship('SchoolBranch', backref='students')   
+    parent_name = db.Column(db.String(50), nullable=False)     
+    contact_phone = db.Column(db.String(15), nullable=False)   
+    health_info = db.Column(db.Text, nullable=True)  
+
+    def __repr__(self):
+        return f'<Student {self.fullname} (Grade: {self.grade})>'
 
 class Grade(db.Model):
     __tablename__ = 'grades'
@@ -85,26 +107,21 @@ class Stream(db.Model):
 
     def __repr__(self):
         return str(self.stream_name)
-
-
-class Student(db.Model):
-    __tablename__ = 'students'
     
-    id = db.Column(db.Integer, primary_key=True)   
-    fullname = db.Column(db.String(50), nullable=False)   
-    grade = db.Column(db.String(10), nullable=False)    
-    photo = db.Column(db.String(255), nullable=True)   
-    adm_no = db.Column(db.String(20), unique=True, nullable=False)      
-    gender = db.Column(db.String(10), nullable=False)  
-    stream = db.Column(db.String(50), nullable=True)   
-    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=True)
-    branch = db.relationship('SchoolBranch', backref='students')   
-    parent_name = db.Column(db.String(50), nullable=False)     
-    contact_phone = db.Column(db.String(15), nullable=False)   
-    health_info = db.Column(db.Text, nullable=True)  
+
+class GradeStreamBranch(db.Model):
+    __tablename__ = 'grade_stream_branch'
+
+    id = db.Column(db.Integer, primary_key=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=False)
+    grade_id = db.Column(db.Integer, db.ForeignKey('grades.id'), nullable=False)
+    stream_name = db.Column(db.String(50), nullable=False)  # East, West, etc.
+
+    branch = db.relationship('SchoolBranch', backref='grade_streams')
+    grade = db.relationship('Grade', backref='branch_streams')
 
     def __repr__(self):
-        return f'<Student {self.fullname} (Grade: {self.grade})>'
+        return f"{self.branch.name} - {self.grade.grade_name} - {self.stream_name}"
     
 
 class Subject(db.Model):
@@ -115,14 +132,20 @@ class Subject(db.Model):
     grades = db.Column(db.PickleType, nullable=True)  # You can also use JSON or ARRAY if using PostgreSQL
 
 
-class Roles(db.Model):
+class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.String(50), default='Teacher')
     grade = db.Column(db.String(50), default=None)
     stream = db.Column(db.String(50), default=None)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), 
-                 nullable=False) 
-    teacher = db.relationship("Teacher", backref="duty")
+    center_branch = db.Column(db.String(200), default=None)
+    
+    # Foreign key to Teacher
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), nullable=False, unique=True)
+
+     
+
+    def __repr__(self):
+        return f"<Role {self.role} for Teacher ID: {self.teacher_id}>"
 
 
 class TeacherSubjectAssignment(db.Model):
@@ -131,24 +154,24 @@ class TeacherSubjectAssignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
-    grade = db.Column(db.String(50), nullable=False)  
-    stream = db.Column(db.String(50), nullable=True)  # Stream can be NULL if not provided
+
+    grade_stream_branch_id = db.Column(db.Integer, db.ForeignKey('grade_stream_branch.id'), nullable=True)
+
+    grade = db.Column(db.Integer, db.ForeignKey('grades.id'), nullable=True)
+
+    # Optional metadata
+    term = db.Column(db.String(20), nullable=True)
+    year = db.Column(db.Integer, nullable=True)
 
     # Relationships
     teacher = db.relationship("Teacher", backref="assigned_subjects")
-    subject = db.relationship("Subject", backref="teacher_assignments") 
+    subject = db.relationship("Subject", backref="teacher_assignments")
+    grade_stream_branch = db.relationship("GradeStreamBranch", backref="teacher_subject_assignments")
 
-    def teaching_sub(self):
-        return self.subject.subject
-    
-    def teaching_grade(self):
-        return self.grade
-    
-    def teaching_stream(self):
-        return self.stream
-    
-    def __repr__(self): 
-        return f"{self.subject.subject} ({self.grade}  {self.stream})"
+
+    def __repr__(self):
+        return f"{self.teacher.teacher_name} - {self.subject.subject} ({self.grade_stream_branch})"
+ 
     
     
 class Exam(db.Model):
@@ -194,3 +217,21 @@ class SchoolBranch(db.Model):
 
     def __repr__(self):
         return f"<SchoolBranch {self.name} - ID: {self.id}>"
+
+class Staff(db.Model):
+    __tablename__ = 'staff'
+
+    id = db.Column(db.Integer, primary_key=True)
+    fullname = db.Column(db.String(100), nullable=False)
+    designation = db.Column(db.String(50), nullable=False)
+    phone_number = db.Column(db.String(15), unique=True, nullable=False)
+
+    # Relationship to SchoolBranch
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=False)
+    branch = db.relationship('SchoolBranch', backref='staff_members')
+
+    created_at = db.Column(db.DateTime, default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    def __repr__(self):
+        return f"<Staff {self.fullname} - {self.designation}>"

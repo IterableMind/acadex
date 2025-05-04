@@ -1,154 +1,225 @@
 {% extends "base.html" %}
 
 {% block horizontal_nav %} 
-  <span class="mx-3">Access to quick printouts</span>
+<div class="container d-flex links align-items-center">
+    <a href="">
+        <div class="d-flex link__width">
+            <i class="material-icons">list</i>
+            <span class="">Student list</span>
+        </div>
+      </a>
+    <a href="{{ url_for('admin_bp.student_dash') }}">
+      <div class="d-flex link__width">
+          <i class="material-icons">dashboard</i>
+          <span class="">Student Dash</span>
+      </div>
+    </a>
+    <a href="{{ url_for('admin_bp.add_student') }}">
+      <div class="d-flex link__width">
+          <i class="material-icons">person_add</i>
+          <span>Add student</span>
+      </div>
+    </a>
+  </div> 
 {% endblock horizontal_nav %}
 
 {% block main_content %}  
-  <div class="container bg-white p-3">
-    <h5 class="text-center">Select class to print/download mark list</h5>
-    
-    <select name="grade" id="grade-select" class="form-select">
-      <option value="" selected disabled>Select Grade</option>
-      <option value="Grade 1">Grade 1</option>
-      <option value="Grade 2">Grade 2</option>
-      <option value="Grade 3">Grade 3</option>
-      <option value="Grade 4">Grade 4</option>
-      <option value="Grade 5">Grade 5</option>
-      <option value="Grade 6">Grade 6</option>
-      <option value="Grade 7">Grade 7</option>
-    </select>
-    
-    <div id="stream-container" class="mt-3" style="display: none;">
-      <label for="stream-select">Select Stream</label>
-      <select name="stream" id="stream-select" class="form-select">
-        <option value="" selected disabled>Select Stream</option>
-      </select>
-    </div>
+  <div class="container bg-white shadow-sm px-5 pt-2 pb-2">
+    <h5 class="text-center border-bottom pb-1">
+        <i class="bi bi-list mx-2"></i>Students Lists
+    </h5>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            <b>{{ form.branch.label }}<span class="text-danger"> *</span></b>  
+            {{ form.branch(id="branch", class="form-select is-primary" + 
+            (' is-danger' if form.branch.errors else '')) }}
+            {% for error in form.branch.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <div class="col-sm-6 mt-2">
+                <b>{{ form.list_type.label }}<span class="text-danger"> *</span></b>  
+                {{ form.list_type(id="list_type", class="form-select is-primary" + 
+                (' is-danger' if form.list_type.errors else '')) }}
+                {% for error in form.list_type.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            <div class="col-sm-6 d-flex mt-2">
+                <!-- Grades select Element-Hidden by default -->
+                <div class="form-group w-50" style="display: none;" id="grade-field">
+                    <b>{{ form.grade.label }}<span class="text-danger"> *</span></b>  
+                    {{ form.grade(id="grade", class="form-select is-primary" + 
+                    (' is-danger' if form.grade.errors else '')) }}
+                    {% for error in form.grade.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                <!-- Streams input-Dynamically Generated -->
+                <div class="mx-2 w-50" style="display: none;" id="stream-fields">
+                    <b>{{ form.stream.label }}</b>   
+                    <select id="dynamicSelect" class="form-select" name="stream"></select>
+                </div>
+            </div>
+        </div>
+        {% for error in form.stream.errors %}
+            <h6 class="text-danger text-center mt-2" id="stream-error">{{ error }}</h6>
+        {% endfor %}  
+        <div class="d-flex justify-content-end mt-2 mb-2">
+            <button class="submit btn btn-danger">
+                <i class="bi bi-gear-fill mx-2"></i>Generate List
+            </button>
+        </div>
+    </form>  
   </div>
-
-  <div class="container bg-white p-3 mt-3">
-    <div class="d-flex justify-content-center">
-      <img src="{{ url_for('static', filename='images/app-images/school-logo.JPG') }}" alt="No image">
-    </div>
-    <h5 class="text-center" id="grade-label"></h5>
-    <table class="table table-bordered" id="student-table"
-      style="display: none;">
-      <caption style="caption-side: top;">
-        <form action="{{ url_for('admin_bp.download_marklist') }}" method="post">
-          <input type="text" name="hidden-grade" style="display: none;">
-          <input type="text" name="hidden-stream" style="display: none;"> 
-            <button class="btn btn-danger btn-sm" type="submit">
-              <i class="fa fa-download"></i> Download List
-            </button> 
-        </form>
-      </caption>
-      <thead>
-        <tr class="border">
-          <th style="width: 1%"  class="border">#</th>  <!-- Number column -->
-          <th>Full Name</th> 
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div> 
+  <div class="container bg-white mt-3 p-3" id="students-display">
+    {% if students %}
+       <h4 class="text-center fw-bold"> 
+        {% if "SCHOOL" in query_data['branch'].name|upper %}
+            {{ query_data['branch'].name|upper }}
+        {% else %}
+            {{ query_data['branch'].name|upper }} SCHOOL
+        {% endif %}
+       </h4>
+       <h5 class="text-center fw-bold">{{ query_data['school_addr'] }}</h5>
+        <h6 class="text-center fw-bold">
+            {{ query_data['grade'].grade_name }}
+            {% if query_data['stream'] %}
+                -{{ query_data['stream'] }}   
+            {% endif %}
+            {% if query_data['sub_info']['subjects'] %}
+                Mark List
+            {% else %}
+                Class List
+            {% endif %}
+        </h6>
+        <div class="d-flex mb-2 mx-5 justify-content-end">
+            <form action="{{ url_for('admin_bp.generate_student_pdf_list') }}" 
+                method="post"   target="_blank">
+                <input type="hidden" name="branch" value="{{ query_data['branch'].name }}">
+                <input type="hidden" name="grade" value="{{ query_data['grade'].grade_name }}">
+                <input type="hidden" name="strm" value="{{ query_data['stream'] }}">
+                <input type="hidden" name="subjects" value="{{ query_data['sub_info']
+                ['subjects'] }}">
+                <input type="hidden" name="list-type" value="{{ query_data['list_type'] }}">
+                <button type="submit" class="btn btn-sm btn-success">
+                    <i class="bi bi-download mx-2"></i>Download PDF
+                </button>
+            </form>
+        </div>
+       <div class="table-responsive">
+            <table class="table border table-bordered" style="
+                max-width: 900px; margin-left: auto;
+                margin-right: auto;">
+                <thead>
+                    <tr>
+                        <th style="width: 1%;" class="border">#</th>
+                        <th class="border">Adm No</th>
+                        <th class="border">Student Name</th>
+                        {% if query_data['sub_info']['subjects'] %}
+                            {% for sub in query_data['sub_info']['subjects'] %}
+                                <th class="text-center border">{{ sub[:4] }}</th>
+                            {% endfor %}
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.adm_no }}</td>
+                            <td>{{ student.fullname }}</td>
+                            {% if query_data['sub_info']['subjects'] %}
+                                {% for sub in query_data['sub_info']['subjects'] %}
+                                    {% if loop.index != query_data['sub_info']['sub_len'] %}
+                                        <td></td>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+       </div>
+    {% endif %}
+  </div>
+  <div class="line-with-text mt-5">
+    <small class="text-muted"><b>2025 © Bushra.</b> All rights reserved.</small>
+ </div>
   <script>
-    const studentLabel = document.getElementById('grade-label');
-    document.getElementById('grade-select').addEventListener('change', function() {
-      const selectedGrade = this.value;
-      if (!selectedGrade) return;
+     document.addEventListener("DOMContentLoaded", function() {
+        const branchField = document.getElementById('branch');
+        const gradeField = document.getElementById('grade-field');
+        const streamField = document.getElementById("stream-fields");
 
-      var hidden_grade = document.getElementsByName('hidden-grade')[0];
-      var hidden_stream = document.getElementsByName('hidden-stream')[0];
+        // Show grade field when branch is selected
+        branchField.addEventListener("change", function() {
+            const table = document.getElementById('students-display');
+            const streamErrorsms = document.getElementById('stream-error');
+            if (table) {table.remove()}
+            if (streamErrorsms) {
+                streamErrorsms.textContent = "";
+            };
+            
 
-      hidden_stream.value = "";
+            document.getElementById('grade').selectedIndex = 0;
+            document.getElementById('list_type').selectedIndex = 0;
+            streamField.style.display = "none";
+            if (branchField.value !== "") {
+                gradeField.style.display = "block";
+            } else {
+                gradeField.style.display = "none";
+                streamField.style.display = "none";   
+            }
+        });
 
-      // Clear student table immediately when switching grades
-      clearStudentTable();
+        // Fetch streams when grade is selected
+        document.getElementById("grade").addEventListener("change", function() {
+            const grade = this.value;
+            const branch = branchField.value;
 
-      fetch("{{ url_for('admin_bp.get_streams') }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ selectedValue: selectedGrade })
-      })
-      .then(response => response.json())
-      .then(streams => {
-        const streamSelect = document.getElementById('stream-select');
-        const streamContainer = document.getElementById('stream-container');
+            if (grade && branch) {
+                fetch('{{ url_for("admin_bp.fetch_streams") }}', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ grade: grade, branch: branch })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.streams.length > 0) {
+                        streamField.style.display = "block";
+                        const streamSelect = document.getElementById("dynamicSelect");
+                        streamSelect.innerHTML = '';
 
-        streamSelect.innerHTML = '<option value="" selected disabled>Select Stream</option>';
+                        // Add default option
+                        const defaultOption = document.createElement("option"); 
+                        defaultOption.value = "";
+                        defaultOption.textContent = "Select stream";
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        streamSelect.appendChild(defaultOption);
 
-        if (streams.length > 0) {
-          streams.forEach(stream => {
-            const option = document.createElement('option');
-            option.value = stream;
-            option.textContent = stream;
-            streamSelect.appendChild(option);
-          });
+                        data.streams.forEach(stream => {
+                        const option = document.createElement("option");
+                        option.value = stream;
+                        option.textContent = stream;
+                        streamSelect.appendChild(option);
+                        });
+                    } else {
+                        streamField.style.display = "none";
+                    }
+                    });
 
-          streamContainer.style.display = 'block';
-
-          // Hide the student table since a stream selection is required
-          document.getElementById('student-table').style.display = 'none';
-
-        } else {
-          streamContainer.style.display = 'none';
-          fetchStudents(selectedGrade, null);
-          studentLabel.textContent = selectedGrade + ' students';
-          hidden_grade.value = selectedGrade;
-        }
-      })
-      .catch(error => console.error("Error fetching streams:", error));
-    });
-
-    document.getElementById('stream-select').addEventListener('change', function() {
-      const selectedGrade = document.getElementById('grade-select').value;
-      const selectedStream = this.value;
-      studentLabel.textContent = selectedGrade + ' ' + selectedStream + ' students'; 
-      document.getElementsByName('hidden-grade')[0].value = selectedGrade;
-      document.getElementsByName('hidden-stream')[0].value = selectedStream;
-      fetchStudents(selectedGrade, selectedStream);
-    });
-
-    function fetchStudents(grade, stream) {
-      fetch("{{ url_for('admin_bp.get_students') }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ grade: grade, stream: stream })
-      })
-      .then(response => response.json())
-      .then(students => {
-        const table = document.getElementById('student-table');
-        const tbody = table.querySelector("tbody");
-        tbody.innerHTML = "";
+                    
+                } else {
+                streamField.style.display = "none";
+                }  
+        });
         
-        if (students.length > 0) {
-          students.forEach((student, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${index + 1}</td>  <!-- Numbering starts from 1 -->
-              <td>${student.fullname}</td>
-            `;
-            tbody.appendChild(row);
-          });
-          table.style.display = 'table';
-        } else {
-          table.style.display = 'none';
-        }
-      })
-      .catch(error => console.error("Error fetching students:", error));
-    }
-
-    // Function to clear student table when switching grades
-    function clearStudentTable() {
-      const table = document.getElementById('student-table');
-      const tbody = table.querySelector("tbody");
-      tbody.innerHTML = "";
-      table.style.display = 'none';
-    }
+     })
   </script>
 {% endblock main_content %}

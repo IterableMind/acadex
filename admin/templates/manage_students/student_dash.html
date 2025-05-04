@@ -4,8 +4,8 @@
    <div class="container d-flex links align-items-center">
       <a href="{{ url_for('admin_bp.student_dash') }}">
         <div class="d-flex link__width sub--link--active">
-            <i class="material-icons">house</i>
-            <span class="">Home</span>
+            <i class="material-icons">dashboard</i>
+            <span class="">Student Dash</span>
         </div>
       </a>
       <a href="{{ url_for('admin_bp.add_student') }}">
@@ -25,11 +25,11 @@
   <!-- Student Information Section -->
   <div class="container bg-white p-3 shadow-sm mt-3 rounded-2">
     <h5 class="text-center fw-light">
-      <i class="fa fa-chart-bar"></i> Students Distribution Analysis
+      <i class="fa fa-chart-bar"></i> Students Distribution Across All Branches
     </h5>
 
     <!-- Bar Chart for Student Distribution -->
-    <div class="chart-container mt-3 w-75" style="height: 150px;">
+    <div class="chart-container mt-3 w-100" style="height: 200px;">
       <canvas id="studentChart"></canvas>
     </div>
     <!-- rgb(212 212 212) !important -->

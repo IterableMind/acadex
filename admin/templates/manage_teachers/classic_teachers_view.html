@@ -82,12 +82,11 @@
             </div>
          </div>
          <div class="w-100 text-center">
-            <h6 class="mt-2 text-c-muted">
-                {{ teacher.teacher_name }}
-                (<span class="text-danger">{{ teacher.duty[0] }}</span>)
+            <h6 class="mt-2 fw-bold">
+                {{ teacher.teacher_name }} 
             </h6>
             <p>
-               Username: <span class="text-muted">{{ teacher.user[0].username }}</span>
+               Username: <span class="text-muted fw-bold">{{ teacher.user[0].username }}</span>
             </p>
             <p>Phone: <span class="fw-bold">{{ teacher.phone_no }}</span></p>
             {% if teacher.assigned_subjects %} 

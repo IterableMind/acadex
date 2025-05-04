@@ -4,16 +4,16 @@
 {% block horizontal_nav %} 
    <!-- Teacher management utilities -->
    <div class="container d-flex links align-items-center">
+    <a href="{{ url_for('admin_bp.add_subject') }}">
+        <div class="d-flex link__width {{  add_active }}">
+           <i class="material-icons">add</i>
+           <span>Add/Delete subject</span>
+        </div>
+     </a>
       <a href="{{ url_for('admin_bp.view_subjects') }}">
          <div class="d-flex link__width {{ view_active }}">
             <i class="material-icons">visibility</i>
             <span class="">View Subjects</span>
-         </div>
-      </a>
-      <a href="{{ url_for('admin_bp.add_subject') }}">
-         <div class="d-flex link__width {{  add_active }}">
-            <i class="material-icons">add</i>
-            <span>Add / Delete subject</span>
          </div>
       </a>
    </div> 
