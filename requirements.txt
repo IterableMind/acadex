@@ -17,6 +17,7 @@ fonttools==4.56.0
 fpdf2==2.8.3
 greenlet==3.1.1
 idna==3.10
+gunicorn==23.0.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
 kiwisolver==1.4.8
