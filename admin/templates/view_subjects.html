@@ -1,43 +1,47 @@
 {% extends "subjects_layout.html" %}
 
-{% block sub_content %} 
-  <div class="container bg-white p-3">
-    <div class="d-flex align-items-center">
-      <hr class="flex-grow-1">
-      <h5 class="mx-3 text-center fw-light">
-        <i class="fa fa-book"></i> Subject Teacher Distribution Analysis
-      </h5>
-      <hr class="flex-grow-1"> 
-    </div>
-
-    {% if all_subjects %}
-      {% for subject in all_subjects %}
-        <div class="border mb-3 p-3">
-          <h5 class="text-center fw-bold" style="color: #45cab9">
-            {{ subject.subject }} <small>({{ subject.short_form }})</small> 
-          </h5>
-          <table class="table table-bordered">
-            <thead class="table-light">
-              <tr>
-                <th>Grade</th>
-                <th>Stream</th>
-                <th>Teacher</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for assignment in subject.teacher_assignments %}
-                <tr>
-                  <td>{{ assignment.grade }}</td>
-                  <td>{{ assignment.stream if assignment.stream else '---' }}</td>
-                  <td>{{ assignment.teacher.teacher_name }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-center text-muted">No subjects assigned yet.</p>
-    {% endif %}
+{% block sub_content %}
+<div class="container bg-white p-3">
+  <div class="d-flex align-items-center">
+    <hr class="flex-grow-1">
+    <h5 class="mx-3 text-center fw-light">
+      <i class="fa fa-book"></i> Subject Teacher Distribution Analysis
+    </h5>
+    <hr class="flex-grow-1">
   </div>
+
+  {% if grouped_subjects %}
+    {% for subject_name, teachers in grouped_subjects.items() %}
+      <div class="border mb-3 p-3 mt-3">
+        <h5 class="text-center fw-bold">
+          {{ subject_name|upper }}
+        </h5>
+        <table class="table table-bordered border table-hover">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 1%">#</th>
+              <th class="border">Branch</th>
+              <th class="border">Grade</th>
+              <th class="border">Stream</th>
+              <th class="border">Teacher</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in teachers %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ t.branch }}</td>
+                <td>{{ t.grade }}</td>
+                <td>{{ t.stream if t.stream else '---' }}</td>
+                <td>{{ t.teacher }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-center text-muted">No subjects assigned yet.</p>
+  {% endif %}
+</div>
 {% endblock sub_content %}

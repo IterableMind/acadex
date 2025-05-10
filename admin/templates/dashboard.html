@@ -44,10 +44,10 @@
             {% endif %}
             <div class="profile-welcome d-flex justify-content-center align-items-center w-50 p-3">
               <p>
-                Welcome <b>{{ current_user.teacher.teacher_name }}.</b> Manage the <b>assessment</b> of
-                your students from the comfort of your <b> phone/computer</b>.<br>
+                Welcome <b>{{ current_user.teacher.teacher_name }}.</b> Control the <b>Management</b> of
+                your schools from the comfort of your <b> Phone/Computer</b>.<br>
                 <b class="mt-4">Role:</b><small class="text-danger mx-2 fw-bold">
-                  {{ current_user.teacher.role | capitalize() }}
+                  {{ current_user.teacher.role_record.role|title }}
                 </small>
               </p>
             </div>

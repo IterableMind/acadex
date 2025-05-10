@@ -588,7 +588,8 @@ class AssignTeacherRoleForm(FlaskForm):
             ('headteacher', 'Headteacher'),
             ('deputy headteacher', 'Deputy Headteacher'),
             ('classteacher', 'Class Teacher'),
-            ('senior teacher', 'Senior Teacher')
+            ('senior teacher', 'Senior Teacher'),
+            ('system admin', 'System Admin'),
         ],
         # default='teacher',
         validators=[DataRequired()]

@@ -108,20 +108,6 @@ class Stream(db.Model):
     def __repr__(self):
         return str(self.stream_name)
     
-
-class GradeStreamBranch(db.Model):
-    __tablename__ = 'grade_stream_branch'
-
-    id = db.Column(db.Integer, primary_key=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=False)
-    grade_id = db.Column(db.Integer, db.ForeignKey('grades.id'), nullable=False)
-    stream_name = db.Column(db.String(50), nullable=False)  # East, West, etc.
-
-    branch = db.relationship('SchoolBranch', backref='grade_streams')
-    grade = db.relationship('Grade', backref='branch_streams')
-
-    def __repr__(self):
-        return f"{self.branch.name} - {self.grade.grade_name} - {self.stream_name}"
     
 
 class Subject(db.Model):
@@ -147,6 +133,21 @@ class Role(db.Model):
     def __repr__(self):
         return f"<Role {self.role} for Teacher ID: {self.teacher_id}>"
 
+
+class GradeStreamBranch(db.Model):
+    __tablename__ = 'grade_stream_branch'
+
+    id = db.Column(db.Integer, primary_key=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('school_branch.id'), nullable=False)
+    grade_id = db.Column(db.Integer, db.ForeignKey('grades.id'), nullable=False)
+    stream_name = db.Column(db.String(50), nullable=False)  # East, West, etc.
+
+    branch = db.relationship('SchoolBranch', backref='grade_streams')
+    grade = db.relationship('Grade', backref='branch_streams')
+
+    def __repr__(self):
+        return f"{self.branch.name} - {self.grade.grade_name} - {self.stream_name}"
+    
 
 class TeacherSubjectAssignment(db.Model):
     __tablename__ = 'teacher_subject_assignments'

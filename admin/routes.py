@@ -618,8 +618,7 @@ def delete_teacher():
             db.session.delete(tr_role)
 
         # Delete assigned subjects
-        for t in TeacherSubjectAssignment.query.filter_by(teacher_id=tr.id).all():
-            db.session.delete(t)
+        TeacherSubjectAssignment.query.filter_by(teacher_id=tr.id).delete()
 
         # Delete user login account
         User.query.filter_by(teacher_id=tr.id).delete()
@@ -1094,23 +1093,69 @@ def get_students():
     return jsonify(student_list)
 
 
+from collections import defaultdict
+
 @admin_bp.route('/view_subjects', methods=['GET', 'POST'])
 @login_required
 def view_subjects():
+    grades = Grade.query.all()
+    all_subjects_info = []
+
     try:
-        all_subjects = Subject.query.all()
-        grades = Grade.query.all()
+        all_assignments = TeacherSubjectAssignment.query.all()
+
+        for assignment in all_assignments:
+            subs_holder = {}
+
+            stream = GradeStreamBranch.query.filter_by(id=assignment.grade_stream_branch_id).first()
+            subject = Subject.query.get(assignment.subject_id)
+            teacher = Teacher.query.get(assignment.teacher_id)
+
+            if not subject or not teacher:
+                continue  # Skip incomplete data
+
+            if stream:
+                branch = SchoolBranch.query.get(stream.branch_id)
+                grd = Grade.query.get(stream.grade_id)
+
+
+                subs_holder = {
+                    'teacher': teacher.teacher_name,
+                    'branch': branch.name if branch else None,
+                    'subject': subject.subject,
+                    'stream': stream.stream_name,
+                    'grade': grd.grade_name if grd else None
+                }
+            elif assignment.grade:
+                grade = Grade.query.get(assignment.grade)
+                subs_holder = {
+                    'teacher': teacher.teacher_name,
+                    'branch': teacher.branch.name if teacher.branch else None,
+                    'subject': subject.subject,
+                    'grade': grade.grade_name if grade else None,
+                    'stream': None
+                }
+
+            all_subjects_info.append(subs_holder)
+
     except SQLAlchemyError as e:
-        current_app.logger.error(e)
+        current_app.logger.error(f'{e} TRACEBACK\n{traceback.format_exc()}')
         db.session.rollback()
-        flash('Failured to load subjects! There may be no subjects or an internal error occured!')
+        flash('Failed to load subjects! There may be no subjects or an internal error occurred.', 'danger')
+
+    # Group by subject
+    grouped_subjects = defaultdict(list)
+    for info in all_subjects_info:
+        grouped_subjects[info['subject']].append(info)
+
     return render_template(
         'view_subjects.html',
-        all_subjects = all_subjects,
-        grades = grades,
-        view_active = HORIZONTAL_ACTIVE,
-        sub_active = ACTIVE
+        grouped_subjects=grouped_subjects,
+        grades=grades,
+        view_active=HORIZONTAL_ACTIVE,
+        sub_active=ACTIVE
     )
+
 
 
 
@@ -1212,6 +1257,10 @@ def assign_teacher_subjects(teacher_id):
             stream = request.form.get('stream')
             subject_ids = request.form.getlist('subjects')  # list of subject IDs
 
+            if not subject_ids:
+                flash("You must select atleast one subjct to assign.", "warning")
+                return redirect(request.url)
+
             selected_grade = Grade.query.filter_by(grade_name=grade).first()
             if not selected_grade:
                 flash("Invalid grade selected.", "danger")
@@ -1246,9 +1295,15 @@ def assign_teacher_subjects(teacher_id):
                         ).delete()
 
                         # Remove assignment if another teacher has it.
+                        # exist_branch = SchoolBranch.query.filter_by(
+                        #     id = gsb.id
+                        # ).first()
+
+                        # if exist_branch.id == teacher.id:
                         existing_assignment = TeacherSubjectAssignment.query.filter_by(
                             grade_stream_branch_id=gsb.id,
-                            subject_id=subject_id                    
+                            subject_id=subject_id,
+                                            
                         ).first()
 
                         if existing_assignment:
@@ -1267,10 +1322,16 @@ def assign_teacher_subjects(teacher_id):
                     # Remove other teacher with this subject in the same grade.
                     existing_assignment = TeacherSubjectAssignment.query.filter_by(
                         grade=grade_id,
-                        subject_id=subject_id                    
+                        subject_id=subject_id,                   
                     ).first()
+                      
                     if existing_assignment:
-                        db.session.delete(existing_assignment)
+                        # Delete subject if it belong to another teacher in the same branch.
+                        prev_sub_assign = Teacher.query.filter_by(
+                            id=existing_assignment.teacher_id).first()
+                        
+                        if prev_sub_assign.branch.id == teacher.branch.id:
+                            db.session.delete(existing_assignment)
 
                     # Remove existing assignments for this teacher in this class
                     TeacherSubjectAssignment.query.filter_by(
