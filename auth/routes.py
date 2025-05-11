@@ -1,5 +1,5 @@
 from flask import render_template, url_for, flash, redirect
-from . import auth_bp
+from __init__.py import auth_bp
 from ..admin import admin_bp
 from .forms import LoginForm
 from ..models import Teacher, User, db 
