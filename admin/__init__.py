@@ -8,4 +8,4 @@ admin_bp = Blueprint(
   static_folder = 'static'
 )
 
-from . import routes
+from acadex.admin import routes
