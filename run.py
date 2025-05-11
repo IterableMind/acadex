@@ -4,7 +4,7 @@
 # if __name__ == '__main__':
 #   create_app()
   
-from acadex import create_app
+from . import create_app
 
 # run app
 if __name__ == '__main__':
