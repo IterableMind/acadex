@@ -1,6 +1,6 @@
 from faker import Faker
 import random
-from ..models import Student, db, SchoolBranch  # Adjust imports if needed
+from acadex.models import Student, db, SchoolBranch  # Adjust imports if needed
 
 def generate_random_students(num_students):
     fake = Faker()
