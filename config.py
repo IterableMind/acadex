@@ -14,5 +14,5 @@ class Config:
 
   # Use the instance folder for the SQLite database file
 #   SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(instance_path, 'app.db')}"
-    SQLALCHEMY_DATABASE_URI = 'postgresql://bushra_user:t6LIfL0F61gZMWHw2ZDJo3QN1JPTKNf3@dpg-d0fu4oq4d50c73f9lgig-a/bushra'
+  SQLALCHEMY_DATABASE_URI = 'postgresql://bushra_user:t6LIfL0F61gZMWHw2ZDJo3QN1JPTKNf3@dpg-d0fu4oq4d50c73f9lgig-a/bushra'
   SQLALCHEMY_TRACK_MODIFICATIONS = False
