@@ -1,1 +1,2 @@
-web: gunicorn app:acadex 
+web: gunicorn run:app
+
