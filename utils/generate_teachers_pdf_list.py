@@ -1,7 +1,7 @@
 from fpdf import FPDF
 from flask import make_response
 import io
-from ..models import SchoolBranch
+from acadex.models import SchoolBranch
 
 class TeacherListPDF(FPDF):
     def footer(self): 
