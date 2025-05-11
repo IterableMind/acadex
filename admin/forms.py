@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
-from ..models import Teacher, Student, Staff, SchoolBranch, Grade
+from acadex.models import Teacher, Student, Staff, SchoolBranch, Grade
 from wtforms_sqlalchemy.fields import QuerySelectField
 from wtforms import (
     StringField, 
